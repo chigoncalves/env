@@ -1,0 +1,18 @@
+#-*- mode: conf -*-
+
+[ui]
+username = 'Edelcides Gonçalves <eatg75@gmail.com>'
+verbose = False
+style = compact
+ssh = 'ssh -C'
+
+[extensions]
+color =
+extdiff =
+progress =
+hgext.schemes =
+graphlog =
+
+
+[color]
+mode = auto

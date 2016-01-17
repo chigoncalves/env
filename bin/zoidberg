@@ -1,0 +1,243 @@
+#!/usr/bin/env perl
+
+package EnvConf;
+use 5.012000;
+
+use File::Path qw(make_path remove_tree);
+use File::Basename q(dirname);
+use File::Spec::Functions q(catdir);
+use File::Copy q/move/;
+
+sub new : method {
+  my ($class, $self) = @_;
+
+  my @uf = qw/history
+      .bash_history
+      .bashrc
+      .profile
+      Examples
+      examples
+      Music
+      music
+      Images
+      images
+      Public
+      Templates
+      templates
+      Documents
+      Pictures
+      Videos
+      videos/;
+
+  $self->{unwanted_files} = [];
+  for my $file (@uf) {
+      push @{$self->{unwanted_files}}, catdir ($ENV{HOME}, $file);
+  }
+
+  $self->{files_to_link} = {
+      catdir($ENV{SLNC_COD_DIR}, 'emacs-conf') => catdir($ENV{HOME}, '.emacs.d'),
+      catdir($ENV{SLNC_ENV_DIR}, 'ssh_config') => catdir($ENV{HOME}, '.ssh', 'config'),
+      catdir($ENV{SLNC_ENV_DIR}, 'tmux.conf') => catdir($ENV{HOME}, '.tmux.conf'),
+      catdir($ENV{SLNC_ENV_DIR}, 'xorg', 'fonts.conf') => catdir($ENV{HOME},
+							  '.config',
+							  'fontconfig', 'fonts.conf'),
+      catdir($ENV{SLNC_SHARE_DIR}, 'fonts') => catdir($ENV{HOME}, '.fonts'),
+      catdir($ENV{SLNC_ENV_DIR}, 'vim') => catdir($ENV{HOME}, '.vim'),
+      catdir($ENV{SLNC_ENV_DIR}, 'vimrc') => catdir($ENV{HOME}, '.vimrc'),
+      catdir($ENV{SLNC_ENV_DIR}, 'gvimrc') => catdir($ENV{HOME}, '.gvimrc'),
+      catdir($ENV{SLNC_ENV_DIR}, 'shell', 'zshrc') => catdir($ENV{HOME}, '.zshrc'),
+      catdir($ENV{SLNC_SHARE_DIR}, 'ccl-1.11', 'lx86cl64') => catdir ($ENV{SLNC_BIN_DIR}, 'ccl'),
+      catdir ($ENV{SLNC_ENV_DIR}, 'abcl_completions') => catdir ($ENV{HOME}, '.abcl_completions'),
+      catdir($ENV{SLNC_ENV_DIR}, 'abclrc') => catdir ($ENV{HOME}, '.abclrc'),
+      catdir($ENV{SLNC_ENV_DIR}, 'hgrc') => catdir ($ENV{HOME}, '.hgrc'),
+				catdir($ENV{SLNC_ENV_DIR}, 'gitconfig') => catdir ($ENV{HOME}, '.gitconfig'),
+				catdir($ENV{SLNC_ENV_DIR}, 'perlcriticrc') => catdir ($ENV{HOME}, '.perlcriticrc'),
+				catdir($ENV{SLNC_ENV_DIR}, 'readline.conf') => catdir ($ENV{HOME}, '.readline.conf'),
+      catdir ($ENV{SLNC_SHARE_DIR}, 'icons') => catdir ($ENV{HOME}, '.icons'),
+  };
+
+  $self->{wanted_dirs} = [
+      catdir($ENV{SLNC_COD_DIR}, 'tmp'),
+      catdir($ENV{HOME}, '.config', 'fontconfig'),
+      catdir($ENV{HOME}, '.ssh'),
+      catdir($ENV{HOME}, '.ssh', 'var'),
+      $ENV{PERLBREW_ROOT},
+      $ENV{PERL_CPANM_HOME},
+      $ENV{SLNC_BIN_DIR},
+      ];
+
+  $self->{'env'} ={
+		   install => {
+			       cpanminus => {
+					     path => catdir ($ENV{PERL_CPANM_HOME}, 'bin', 'cpanm') ,
+					     cmd => '\curl -L https://cpanmin.us | perl - App::cpanminus',
+					     },
+
+			       perlbrew => {
+					    path => catdir ($ENV{PERLBREW_ROOT}, 'bin', 'perlbrew'),
+					    cmd => '\curl -L http://install.perlbrew.pl | bash',
+					    },
+
+			       laravel => {
+					   path => catdir ($ENV{SLNC_BIN_DIR}, 'composer'),
+					   cmd => "curl -sS https://getcomposer.org/installer | php -- --install-dir=$ENV{SLNC_BIN_DIR} --filename=composer",
+					   after => 'composer global require "laravel/installer"',
+					   },
+			       },
+
+
+		   check => {
+			     'android-udev' => {
+						path => '/etc/udev/rules.d/51-android.rules',
+						'warn-msg' => '`udev` rules for Android is missing.',
+						},
+
+			     'clang-alternative' => {
+						     path => '/usr/bin/clang',
+						     'warn-msg' => '`clang` alternative is not set! For more info see `update-alternatives(1)`.',
+						     },
+			     laravel => {
+					 path => "$ENV{HOME}/.composer/vendor/bin/laravel",
+					 'warn-msg' => '`laravel` is missing. Run `composer global require "laravel/installer"` to install it.',
+					 },
+			     },
+		   };
+
+  bless $self, $class;
+}
+
+# perform some pre initializations such as remove dummy files.
+sub pre_configure() {
+  my $self = shift;
+
+  for my $dir (@{$self->{wanted_dirs}}) {
+    if (-d $dir) {
+      say("`$dir` exists. Nothing will be done.") if $self->{verbose};
+    }
+    else {
+      make_path($dir);
+      say("Created `$dir`...") if $self->{verbose};
+    }
+  }
+
+  for my $file (@{$self->{unwanted_files}}) {
+    if (-d $file) {
+     remove_tree $file;
+      say("Removed `$file`...");
+    }
+    elsif (-f $file) {
+     unlink $file if -f $file;
+      say("Removed `$file`");
+    }
+  }
+
+  my @dirs;
+  push @dirs, catdir($ENV{HOME}, '.ssh');
+  while (my $dir = pop @dirs) {
+    opendir(my $DIR_HANDLE, $dir);
+    while (my $dir_entry = readdir $DIR_HANDLE) {
+      next if ($dir_entry eq '..') or ($dir_entry eq '.');
+
+      $dir_entry = catdir $dir, $dir_entry;
+      my $perm_mode = (stat $dir_entry)[2] & 0777;
+      if (-f $dir_entry) {
+        if ($perm_mode != 0600) {
+         chmod 0600, $dir_entry;
+          say("Fixed permissions of \'$dir_entry\' to 0600") if $self->{verbose};
+        }
+      }
+      elsif (-d $dir_entry) {
+        if ($perm_mode != 0700) {
+         chmod 0700, $dir_entry;
+          say("Fixed premissions of \'$dir_entry\' to 0700") if $self->{verbose};
+        }
+        push @dirs, $dir_entry;
+      }
+    }
+    closedir $DIR_HANDLE;
+  }
+}
+
+sub configure() : method {
+  my $self = shift;
+
+  if ($self->{force}) {
+    for my $src (keys %{$self->{files_to_link}}) {
+      my $dest = ${$self->{files_to_link}}{$src};
+      if (-f $dest) {
+        unlink $dest;
+        say("Removed file \'$dest\'.");
+      }
+      elsif (-d $dest) {
+        remove_tree $dest;
+        say("Removed directory \'$dest\'.");
+      }
+    }
+  }
+
+  my %ftl = %{$self->{files_to_link}};
+  while (my ($file, $link) = each %ftl) {
+    if (-l $link) {
+      my $target = readlink $link;
+      next if $target eq $file && !$self->{force};
+      unlink $link;
+      say "Removed link: `$link`.";
+    }
+    elsif (-f $link) {
+      unlink $link;
+      say "Removed file: `$link`.";
+    }
+    elsif (-d $link) {
+      remove_tree $link;
+      say "Removed directory: `$link`.";
+    }
+
+    if (! -e $link || $self->{force}) {
+      symlink $file, $link;
+      say "Created symlink: `$link`." if $self->{verbose};
+    }
+  }
+
+  my %env = %{${$self}{env}};
+  my %install = %{$env{install}};
+  my %check = %{$env{check}};
+
+  for my $name (keys %install) {
+    unless (-e $install{$name}{path}) {
+      say ('~' x 5, "Installing `$name`...", '~' x 5) if $self->{verbose} ;
+      system " $install{$name}{cmd}";
+      if (exists $install{$name}{after} && defined $install{$name}{after}) {
+	system "$install{$name}{after}";
+      }
+    }
+  }
+
+  for my $name (keys %check) {
+    unless (-e $check{$name}{path}) {
+      say $check{$name}{'warn-msg'};
+   }
+  }
+}
+
+package main;
+use Getopt::Long q/GetOptions/;
+
+my %options = (
+               verbose => 0,
+               force => 0,
+              );
+
+GetOptions('verbose' => \$options{verbose},
+           'force' => \$options{force}) or die 'Invalid arguments.';
+
+unless (exists $ENV{SLNC_COD_DIR} and exists $ENV{SLNC_ENV_DIR} and exists $ENV{PERL_CPANM_HOME}
+	and exists $ENV{PERLBREW_ROOT}) {
+    my @var_names = qw/SLNC_COD_DIR SLNC_ENV_DIR PERL_CPANM_HOME PERLBREW_ROOT/;
+    local $" = '\', \'';
+    die "At least one of these variables \'@var_names\' are unset.\n"
+	."Please set them before invoking this script.\n";
+  }
+
+my $env_conf = EnvConf->new(\%options);
+$env_conf->pre_configure();
+$env_conf->configure();

@@ -1,0 +1,8 @@
+# -*-mode: conf -*-
+severity = harsh
+
+[TestingAndDebugging::RequireUseWarnings]
+severity = brutal
+
+[BuiltinFunctions::ProhibitSleepViaSelect]
+severity = brutal

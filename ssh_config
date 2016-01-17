@@ -1,0 +1,35 @@
+Host bitbucket
+    HostName bitbucket.org
+    IdentityFile ~/.ssh/bitbucket_rsa
+
+Host server-a
+    HostName 172.16.0.6
+    IdentityFile ~/.ssh/vbox_servers_rsa
+    BindAddress 172.16.0.1
+    BatchMode yes
+    PasswordAuthentication no
+
+Host server-b
+    HostName 172.16.0.5
+    IdentityFile ~/.ssh/vbox_servers_rsa
+    BatchMode yes
+    PasswordAuthentication no
+
+Host *
+    Protocol 2
+    IdentityFile ~/.ssh/default_rsa
+    ForwardAgent yes
+    ForwardX11 no
+    HostbasedAuthentication no
+    AddressFamily inet
+    Port 22
+    EscapeChar %
+    PubkeyAuthentication yes
+    PreferredAuthentications publickey,password-interactive,password
+    Compression yes
+    CompressionLevel 7
+    ConnectionAttempts 3
+    ConnectTimeout 4
+    ControlMaster yes
+    LogLevel VERBOSE
+    ControlPath ~/.ssh/var/control_path
