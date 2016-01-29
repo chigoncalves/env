@@ -38,7 +38,7 @@ sub new : method {
       catdir($ENV{SLNC_COD_DIR}, 'emacs-conf') => catdir($ENV{HOME}, '.emacs.d'),
       catdir($ENV{SLNC_ENV_DIR}, 'ssh_config') => catdir($ENV{HOME}, '.ssh', 'config'),
       catdir($ENV{SLNC_ENV_DIR}, 'tmux.conf') => catdir($ENV{HOME}, '.tmux.conf'),
-      catdir($ENV{SLNC_ENV_DIR}, 'xorg', 'fonts.conf') => catdir($ENV{HOME},
+      catdir($ENV{SLNC_ENV_DIR}, 'x11', 'fonts.conf') => catdir($ENV{HOME},
 							  '.config',
 							  'fontconfig', 'fonts.conf'),
       catdir($ENV{SLNC_SHARE_DIR}, 'fonts') => catdir($ENV{HOME}, '.fonts'),
