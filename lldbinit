@@ -1,0 +1,4 @@
+# -*- mode: conf -*-
+
+command alias break breakpoint set
+command alias delete breakpoint delete
