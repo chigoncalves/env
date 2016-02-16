@@ -1,41 +1,12 @@
 #!/usr/bin/env perl
 
-# pragmas
 use 5.020;
 use autodie;
 use strict;
 use utf8;
-use feature q/unicode_strings/;
-no warnings q/experimental::smartmatch/;
+use feature qw/unicode_strings signatures/;
+no warnings qw/experimental::smartmatch experimental::signatures/;
 
-
-package Logger;
-
-sub new() {
-    my ($class, $verbose) = @_;
-    my $instance = { };
-
-    $instance->{verbose} = defined $verbose ? $verbose : 0;
-    bless $instance, $class;
-}
-
-sub verbose() {
-    my ($self, $verbose) = @_;
-
-    return $self->{verbose} unless defined $verbose;
-
-    $self->{verbose} = $verbose
-}
-
-sub log() {
-    my ($self, $message) = @_;
-
-    say $message if $self->{verbose}
-}
-
-package main;
-
-# modules
 use Cwd q(cwd);
 use File::Copy q(move);
 use File::Basename q(basename);
@@ -45,66 +16,58 @@ use File::Spec::Functions q(catdir);
 my $same_directory = 0;
 my @dirs;
 my %options = (
-               indexfile => 'index_results.txt',
-               directory => cwd(), # directory where to work, by default its the current working directory.
-               command => 'print', # action to be taken by scrufy
-               index_file => 'scrufy_indexed.txt', # file where to store the indexed filenames
-               recursively => 0, # indicates wheter to be recursively.
-               pattern => qr(.*), # by default match anything
-               verbose => 0,
-               overwrite_if_exists => 0,
-               verbose => 0,
-               short => 0,
-               no_short => 0,
-               permision => oct '0744',
-              );
+  indexfile => 'index_results.txt',
+  directory => cwd(), # directory where to work, by default its the current working directory.
+  command => 'print', # action to be taken by scrufy
+  index_file => 'scrufy_indexed.txt', # file where to store the indexed filenames
+  recursively => 0, # indicates wheter to be recursively.
+  pattern => qr(.*), # by default match anything
+  verbose => 0,
+  overwrite_if_exists => 0,
+  verbose => 0,
+  short => 0,
+  no_short => 0,
+  permision => oct '0744',
+);
 
 GetOptions (
-            'directory|d=s' => \$options{directory},
-            'pattern|p=s' => \$options{pattern},
-            'command|c=s' => \$options{command},
-            'index-file=s' => \$options{indexfile},
-            'recursively' => \$options{recursively},
-            'overwrite-if-exists' => \$options{'overwrite-if-exists'},
-            'verbose' => \$options{verbose},
-            'short' => sub { $same_directory = 1 },
-            'no-short' => sub { $same_directory = 0 },
-            'permision=s' => sub { $options{fix_permision} = oct $_[1] },
-           );
+  'directory|d=s' => \$options{directory},
+  'pattern|p=s' => \$options{pattern},
+  'command|c=s' => \$options{command},
+  'index-file=s' => \$options{indexfile},
+  'recursively' => \$options{recursively},
+  'overwrite-if-exists' => \$options{'overwrite-if-exists'},
+  'verbose' => \$options{verbose},
+  'short' => sub { $same_directory = 1 },
+  'no-short' => sub { $same_directory = 0 },
+  'permision=s' => sub { $options{fix_permision} = oct $_[1] },
+);
 
-my $logger = Logger->new($options{verbose});
+$options{pattern} =~ s/\s/?.t/g;
+$options{pattern} =~ s/#/.?sharp/g;
+$options{pattern} =~ s/\+/.?plus/g;
 
+sub rename_file($old_file, $new_file) {
+  return if $old_file eq $new_file;
 
-{
-    $options{pattern} =~ s/\s/?.t/g;
-    $options{pattern} =~ s/#/.?sharp/g;
-    $options{pattern} =~ s/\+/.?plus/g;
-}
+  my ($old_file_basename, $new_file_basename) = ($old_file, $new_file);
+  if ($same_directory) {
+    $old_file_basename = basename $old_file_basename;
+    $new_file_basename = basename $new_file_basename;
+  }
 
-sub rename_file($$) {
-    my ($old_file, $new_file) = @_;
+  if (-f $new_file) {
+    if ($options{'overwrite-if-exists'}) {
+      move $old_file, $new_file;
+      say "Overwrited: \'$new_file\'";
+    } else {
+      say "File \'$old_file_basename\' exists nothing will be done.";
 
-    return if $old_file eq $new_file;
-
-    my ($old_file_basename, $new_file_basename) = ($old_file, $new_file);
-    if ($same_directory) {
-        $old_file_basename = basename $old_file_basename;
-        $new_file_basename = basename $new_file_basename;
     }
-
-    if (-f $new_file) {
-        if ($options{'overwrite-if-exists'}) {
-            $logger->log("Overwriting : \'$new_file\'");
-            move $old_file, $new_file;
-        }
-        else {
-            $logger->log("File \'$old_file_basename\' exists nothing will be done.");
-        }
-    }
-    else {
-        $logger->log("Renaming \'$old_file_basename\' -> \'$new_file_basename\'");
-        move $old_file, $new_file;
-    }
+  } else {
+    move $old_file, $new_file;
+    say "Renamed \'$old_file_basename\' -> \'$new_file_basename\'";
+  }
 }
 
 $options{directory} =~ s%/$%%; # try to remove a trailing forward slash in directory name if it has one.
@@ -113,100 +76,98 @@ die "You can not run this program as root or in a user home directory.\n" if $< 
 push @dirs, $options{directory};
 open my $INDEX_FILE, '>', $options{indexfile}  if $options{command} eq 'index';
 while (my $directory = pop @dirs) {
-    opendir(my $INPUT_DIR, $directory);
+  opendir (my $INPUT_DIR, $directory);
 
-    while (my $dir_entry = readdir $INPUT_DIR) {
-        next if $dir_entry eq '.' || $dir_entry eq '..'; # skip current directory and it's parent directory symbolic links (. and .. respectively)
-        my $dir_entry_path = catdir($directory, $dir_entry);
-        my $dir_entry_new_path = undef; # the $dir_entry new path in case we are going to move it.
+  while (my $dir_entry = readdir $INPUT_DIR) {
+    next if $dir_entry eq '.' || $dir_entry eq '..'; # skip current directory and it's parent directory symbolic links (. and .. respectively)
+    my $dir_entry_path = catdir($directory, $dir_entry);
+    my $dir_entry_new_path = undef; # the $dir_entry new path in case we are going to move it.
 
-        if (-d $dir_entry_path) {
-            push @dirs, $dir_entry_path if $options{recursively};
-        }
-        elsif (-f $dir_entry_path) {
-            if ($dir_entry =~ /$options{pattern}/i) {
-                given ($options{command}) {
-                    # remove
-                    when (/^remove$/) {
-                        $logger->log("Removing \'$dir_entry_path\'");
-                        unlink $dir_entry_path;
-                    }
+    if (-d $dir_entry_path) {
+      push @dirs, $dir_entry_path if $options{recursively};
+    } elsif (-f $dir_entry_path) {
+      if ($dir_entry =~ /$options{pattern}/i) {
+	given ($options{command}) {
+	  # remove
+	  when (/^remove$/) {
+	    unlink $dir_entry_path;
+	    say "Removed \'$dir_entry_path\'";
+	  }
 
-                    # lowercase
-                    when (/^lowercase$/) {
-                        $dir_entry = lc $dir_entry;
-                        $dir_entry_new_path = catdir($directory, $dir_entry);
+	  # lowercase
+	  when (/^lowercase$/) {
+	    $dir_entry = lc $dir_entry;
+	    $dir_entry_new_path = catdir($directory, $dir_entry);
 
-                        rename_file($dir_entry_path, $dir_entry_new_path);
-                    }
+	    rename_file($dir_entry_path, $dir_entry_new_path);
+	  }
 
-                    # translate
-                    when (/^translate$/) {
-                        my $filename_sufix = undef; # file extension
+	  # translate
+	  when (/^translate$/) {
+	    my $filename_sufix = undef; # file extension
 
-                        if ($dir_entry =~ /(\.[a-z0-9]+)$/) {
-                            $filename_sufix = $&;
-                            $dir_entry =~ s/$filename_sufix//; # remove sufix from the filename
-                        }
+	    if ($dir_entry =~ /(\.[a-z0-9]+)$/) {
+	      $filename_sufix = $&;
+	      $dir_entry =~ s/$filename_sufix//; # remove sufix from the filename
+	    }
 
-			$dir_entry =~ s/\'//g;
-			$dir_entry =~ s/(é|ê|è)/e/ig;
-			$dir_entry =~ s/ç/c/ig;
-			$dir_entry =~ s/(á|à|ã|â)/a/ig;
-			$dir_entry =~ s/(ì|í)/i/ig;
-			$dir_entry =~ s/(ò|ó|õ|ô)/o/ig;
-			$dir_entry =~ s/^(packt|apress|oreilly|aw|cengage.?learning|manning|mgh|microsoft.?press|crc|nsp|course.?technology|create.?space|cup)//gi;
-			$dir_entry =~ s/^(mk|no.?starch|pearson|sitepoint|springer|wiley|wrox|yale.?university|peachpit|sybex|big.nerd.ranch)//gi;
-			$dir_entry =~ s/^(pup.?start|routledge|skyhorse.?publishing|prentice.?hall|dk-|leanpub|rocky.nook)//gi;
-			$dir_entry =~ s/\.net/-dotnet/ig;
-			$dir_entry =~ s/^(aw|crc|mp)//i;
-			$dir_entry =~ s/(^adobe.adobe)/adobe/i;
-                        $dir_entry =~ s/^[_-]//; # remove dash and underscores at the beginning of filename.
-                        $dir_entry =~ s/\(|\)|`|'//g;
-                        $dir_entry =~ s/[\s\.\;,:-]|[\._]{2,}/-/g;
-                        $dir_entry =~ s/\(|\[|\]|\)//g; # strip every thing between braces
-			$dir_entry =~ s/cplusplus/c\+\+/g;
-                        $dir_entry =~ s/\+/-plus/g;
-                        $dir_entry =~ s/#/-sharp/g;
-                        $dir_entry =~ s/&/-and/g;
+	    $dir_entry =~ s/(é|ê|è)/e/ig;
+	    $dir_entry =~ s/ç/c/ig;
+	    $dir_entry =~ s/(á|à|ã|â)/a/ig;
+	    $dir_entry =~ s/(ì|í)/i/ig;
+	    $dir_entry =~ s/(ò|ó|õ|ô)/o/ig;
+	    $dir_entry =~ s/^(packt|apress|oreilly|aw|cengage.?learning|manning|mgh|microsoft.?press|crc|nsp|course.?technology|create.?space|cup)//gi;
+	    $dir_entry =~ s/^(mk|no.?starch|pearson|sitepoint|springer|wiley|wrox|yale.?university|peachpit|sybex|big.nerd.ranch)//gi;
+	    $dir_entry =~ s/^(pup.?start|routledge|skyhorse.?publishing|prentice.?hall|dk-|leanpub|rocky.nook)//gi;
+	    $dir_entry =~ s/\.net-/-dotnet-/ig;
+	    $dir_entry =~ s/^(aw|crc|mp)//i;
+	    $dir_entry =~ s/(^adobe.adobe)/adobe/i;
+	    $dir_entry =~ s/^[_-]//; # remove dash and underscores at the beginning of filename.
+	    $dir_entry =~ s/\(|\)|`|'//g;
+	    $dir_entry =~ s/[\s\.;,:._-]+/-/g;
+	    $dir_entry =~ s/\(|\[|\]|\)//g; # strip every thing between braces
+	    $dir_entry =~ s/cplusplus/c\+\+/g;
+	    $dir_entry =~ s/\+/-plus/g;
+	    $dir_entry =~ s/#/-sharp/g;
+	    $dir_entry =~ s/&/-and/g;
 
-			$dir_entry =~ s/-js-/js-/g;
-			$dir_entry =~ s/c-sharp-/csharp-/g;
-			$dir_entry =~ s/f-sharp-/fsharp-/g;
+	    $dir_entry =~ s/-js-/js-/g;
+	    $dir_entry =~ s/c-sharp-/csharp-/g;
+	    $dir_entry =~ s/f-sharp-/fsharp-/g;
 
-                        $dir_entry =~ s/-{2,}/-/g; # replaces multiple underscore to one.
-			$dir_entry =~ s/_+/-/g;
-                        $dir_entry =~ s/(^-|-$)+//g; # removes underscore at the beginning and end of filenames.
-                        $dir_entry .= $filename_sufix if defined $filename_sufix;
+	    $dir_entry =~ s/-{2,}/-/g; # replaces multiple underscore to one.
+	    $dir_entry =~ s/_+/-/g;
+	    $dir_entry =~ s/(^-|-$)+//g; # removes underscore at the beginning and end of filenames.
+	    $dir_entry .= $filename_sufix if defined $filename_sufix;
 
-			if ($dir_entry =~ /\.(7z|zip|tgz|xz)$/) {
-			  $dir_entry =~ s/-example-code/-src/g;
-			}
-                        $dir_entry_new_path = catdir($directory, $dir_entry);
+	    if ($dir_entry =~ /\.(7z|zip|tgz|xz)$/) {
+	      $dir_entry =~ s/-example-code/-src/g;
+	    }
+	    $dir_entry_new_path = catdir $directory, $dir_entry;
 
-                        rename_file($dir_entry_path, $dir_entry_new_path);
-                        $filename_sufix = undef;
-                    }
+	    rename_file($dir_entry_path, $dir_entry_new_path);
+	    $filename_sufix = undef;
+	  }
 
-                    # index
-                    when (/^index$/) { say $INDEX_FILE $dir_entry }
+	  # index
+	  when (/^index$/) { say $INDEX_FILE $dir_entry }
 
-                    # print
-                    when (/^print$/) {
-                        say $same_directory ? $dir_entry : $dir_entry_path;
-                    }
+	  # print
+	  when (/^print$/) {
+	    say $same_directory ? $dir_entry : $dir_entry_path;
+	  }
 
-                    when (/^fix-permision$/) {
-                        chmod $options{permision}, $dir_entry;
-                    }
+	  when (/^fix-permision$/) {
+	    chmod $options{permision}, $dir_entry;
+	  }
 
-                    default { die "Don't know how to something with that!\n" }
-                }
-            }
-        }
+	  default { die 'Invalid command!'; }
+	}
+      }
     }
+  }
 
-    closedir $INPUT_DIR;
+  closedir $INPUT_DIR;
 }
 
 close $INDEX_FILE if $options{command} =~ /^index$/;
