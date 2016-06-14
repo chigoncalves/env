@@ -61,6 +61,7 @@ sub new : method {
       catdir($ENV{HOME}, '.config', 'fontconfig'),
       catdir($ENV{HOME}, '.ssh'),
       catdir($ENV{HOME}, '.ssh', 'var'),
+      catdir ($ENV{SLNC_SHARE_DIR}, 'zeal', 'docset'),
       $ENV{PERLBREW_ROOT},
       $ENV{PERL_CPANM_HOME},
       $ENV{SLNC_BIN_DIR},
@@ -216,6 +217,12 @@ sub configure() : method {
     unless (-e $check{$name}{path}) {
       say $check{$name}{'warn-msg'};
    }
+  }
+
+  my $zeal_conf_file = catdir $ENV{HOME}, '.config', 'Zeal', 'Zeal.conf';
+  my $docset_dir = catdir $ENV{SLNC_SHARE_DIR}, 'zeal', 'docset';
+  if (-e $zeal_conf_file) {
+    system "sed -i -e \"s!path=/home/crowseye/.local/share/Zeal/Zeal/docsets!path=$docset_dir!\" $zeal_conf_file";
   }
 }
 

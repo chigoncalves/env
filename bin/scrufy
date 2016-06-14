@@ -12,6 +12,8 @@ use File::Copy q(move);
 use File::Basename q(basename);
 use Getopt::Long q(GetOptions);
 use File::Spec::Functions q(catdir);
+use open qw(:std :utf8);
+use Encode qw(decode_utf8 encode_utf8);
 
 my $same_directory = 0;
 my @dirs;
@@ -28,6 +30,7 @@ my %options = (
   short => 0,
   no_short => 0,
   permision => oct '0744',
+  'delete-words' => '',
 );
 
 GetOptions (
@@ -41,6 +44,7 @@ GetOptions (
   'short' => sub { $same_directory = 1 },
   'no-short' => sub { $same_directory = 0 },
   'permision=s' => sub { $options{fix_permision} = oct $_[1] },
+  'delete-words=s' => \$options{'delete-words'},
 );
 
 $options{pattern} =~ s/\s/?.t/g;
@@ -73,6 +77,11 @@ sub rename_file($old_file, $new_file) {
 $options{directory} =~ s%/$%%; # try to remove a trailing forward slash in directory name if it has one.
 die "You can not run this program as root or in a user home directory.\n" if $< eq 0 || $options{directory} eq $ENV{HOME};
 
+my @words = ();
+if ($options{'delete-words'} ne '') {
+  @words = split q/;/, $options{'delete-words'};
+}
+
 push @dirs, $options{directory};
 open my $INDEX_FILE, '>', $options{indexfile}  if $options{command} eq 'index';
 while (my $directory = pop @dirs) {
@@ -80,6 +89,7 @@ while (my $directory = pop @dirs) {
 
   while (my $dir_entry = readdir $INPUT_DIR) {
     next if $dir_entry eq '.' || $dir_entry eq '..'; # skip current directory and it's parent directory symbolic links (. and .. respectively)
+    $dir_entry = decode_utf8 $dir_entry;
     my $dir_entry_path = catdir($directory, $dir_entry);
     my $dir_entry_new_path = undef; # the $dir_entry new path in case we are going to move it.
 
@@ -111,21 +121,22 @@ while (my $directory = pop @dirs) {
 	      $dir_entry =~ s/$filename_sufix//; # remove sufix from the filename
 	    }
 
-	    $dir_entry =~ s/(é|ê|è)/e/ig;
-	    $dir_entry =~ s/ç/c/ig;
-	    $dir_entry =~ s/(á|à|ã|â)/a/ig;
-	    $dir_entry =~ s/(ì|í)/i/ig;
-	    $dir_entry =~ s/(ò|ó|õ|ô)/o/ig;
+	    for my $word (@words) {
+	      $dir_entry =~ s/$word//;
+            }
+
 	    $dir_entry =~ s/^(packt|apress|oreilly|aw|cengage.?learning|manning|mgh|microsoft.?press|crc|nsp|course.?technology|create.?space|cup)//gi;
-	    $dir_entry =~ s/^(mk|no.?starch|pearson|sitepoint|springer|wiley|wrox|yale.?university|peachpit|sybex|big.nerd.ranch)//gi;
+	    $dir_entry =~ s/^(mk|no.?starch|pearson|sitepoint|springer|wiley|wrox|yale.?university|peachpit|sybex)//gi;
 	    $dir_entry =~ s/^(pup.?start|routledge|skyhorse.?publishing|prentice.?hall|dk-|leanpub|rocky.nook)//gi;
 	    $dir_entry =~ s/\.net-/-dotnet-/ig;
-	    $dir_entry =~ s/^(aw|crc|mp)//i;
+	    $dir_entry =~ s/^(aw|crc|mp|big.nerd.ranch.guides)//i;
 	    $dir_entry =~ s/(^adobe.adobe)/adobe/i;
 	    $dir_entry =~ s/^[_-]//; # remove dash and underscores at the beginning of filename.
 	    $dir_entry =~ s/\(|\)|`|'//g;
 	    $dir_entry =~ s/[\s\.;,:._-]+/-/g;
-	    $dir_entry =~ s/\(|\[|\]|\)//g; # strip every thing between braces
+	    # $dir_entry =~ s/\(|\[|\]|\)//g; # strip every thing between braces
+	    $dir_entry =~ s/(\(stereo\))//gi; # strip every thing between braces
+	    $dir_entry =~ s/(\[\d+-\d+\])//g; # strip every thing between braces
 	    $dir_entry =~ s/cplusplus/c\+\+/g;
 	    $dir_entry =~ s/\+/-plus/g;
 	    $dir_entry =~ s/#/-sharp/g;
@@ -134,10 +145,17 @@ while (my $directory = pop @dirs) {
 	    $dir_entry =~ s/-js-/js-/g;
 	    $dir_entry =~ s/c-sharp-/csharp-/g;
 	    $dir_entry =~ s/f-sharp-/fsharp-/g;
+	    $dir_entry =~ s/scene/-sc-/g;
 
 	    $dir_entry =~ s/-{2,}/-/g; # replaces multiple underscore to one.
 	    $dir_entry =~ s/_+/-/g;
+	    if ($filename_sufix =~ /\.(zip|rar|epub|djvu|pdf)/) {
+	      $dir_entry =~ s/\d{9,13}$//g;
+	    }
+
 	    $dir_entry =~ s/(^-|-$)+//g; # removes underscore at the beginning and end of filenames.
+
+
 	    $dir_entry .= $filename_sufix if defined $filename_sufix;
 
 	    if ($dir_entry =~ /\.(7z|zip|tgz|xz)$/) {

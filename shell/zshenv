@@ -1,0 +1,26 @@
+export PS1='%F{blue}%U%F{cyan}%n%u%F{magenta}@%f%U%F{blue}%m%f%u%F{red}:%f %F{cyan}%c%f %F{green}%#%f %F{white}'
+export _JAVA_OPTIONS='-Dawt.useSystemAAFontSettings=lcd'
+export PAGER=less
+export SLNC_DIR=~/slnc
+export SLNC_COD_DIR=${SLNC_DIR}/coding
+export SLNC_ENV_DIR=${SLNC_COD_DIR}/env
+export SLNC_LOCAL_DIR=${SLNC_DIR}/local
+export SLNC_SHARE_DIR=${SLNC_LOCAL_DIR}/share
+export SLNC_BIN_DIR=${SLNC_LOCAL_DIR}/bin
+export SLNC_DOC_DIR=${SLNC_LOCAL_DIR}/doc
+export SLNC_PERL_DIR=${SLNC_SHARE_DIR}/perl
+export HISTSIZE=5000
+export SAVEHIST=3000
+export HISTFILE=~/.zsh_history
+export PS2='%F{yellow}...%f '
+export BROWSER=firefox
+export VISUAL=emacs
+export EDITOR=emacs
+export PERL_CPANM_HOME=${SLNC_PERL_DIR}/cpanm
+export PERLBREW_ROOT=${SLNC_PERL_DIR}/perlbrew
+export PERL_MB_OPT="--install_base ${PERL_CPANM_HOME}"
+export PERL_MM_OPT="INSTALL_BASE=${PERL_CPANM_HOME}"
+export PERL5LIB="${PERL_CPANM_HOME}/lib/perl5"
+export PERL_LOCAL_LIB_ROOT="${PERL_CPANM_HOME}:$PERL_LOCAL_LIB_ROOT"
+export PATH="${PERLBREW_ROOT}/bin:${PERL_CPANM_HOME}/bin:${SLNC_BIN_DIR}:${SLNC_ENV_DIR}/bin:${HOME}/.local/bin:$PATH"
+export PATH="/home/crowseye/slnc/local/share/evm/bin:${PATH}"
