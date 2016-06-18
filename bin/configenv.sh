@@ -17,6 +17,7 @@ declare -a llvm_tools=(clang  clang++  clang-apply-replacements \
 			      lldb lldb-argdumper lldb-mi lldb-server)
 
 declare -a lua_tools=(lua luac)
+declare -a node=(node)
 
 function install_alternatives () {
     local version=${@[${#}]}
@@ -62,5 +63,5 @@ function add_settings () {
 
 install_alternatives "${llvm_tools[@]}" ${LLVM_VERSION_SUFFIX}
 install_alternatives "${lua_tools[@]}" ${LUA_VERSION_SUFFIX}
-
+install_alternatives "${node[@]}" "js"
 add_settings
