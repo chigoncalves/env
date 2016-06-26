@@ -1,8 +1,109 @@
 # -*-mode: conf -*-
-severity = harsh
 
 [TestingAndDebugging::RequireUseWarnings]
 severity = brutal
 
 [BuiltinFunctions::ProhibitSleepViaSelect]
 severity = brutal
+
+[Perl::Critic::Policy::BuiltinFunctions::ProhibitComplexMappings]
+  max_statements = 2
+  severity = 4
+
+[BuiltinFunctions::ProhibitReverseSortBlock]
+  severity = 3
+
+[BuiltinFunctions::ProhibitStringyEval]
+  severity = 4
+
+[BuiltinFunctions::ProhibitStringySplit]
+  severity = 4
+
+[BuiltinFunctions::ProhibitUselessTopic]
+  severity = 3
+
+[BuiltinFunctions::ProhibitVoidGrep]
+
+[BuiltinFunctions::ProhibitVoidMap]
+  severity = 4
+
+[BuiltinFunctions::RequireBlockGrep]
+
+[BuiltinFunctions::RequireBlockMap]
+
+[BuiltinFunctions::RequireGlobFunction]
+
+[BuiltinFunctions::RequireSimpleSortBlock]
+  severity = 4
+
+[CodeLayout::ProhibitHardTabs]
+
+[CodeLayout::ProhibitParensWithBuiltins]
+
+[CodeLayout::ProhibitQuotedWordLists]
+
+[CodeLayout::ProhibitTrailingWhitespace]
+
+[ControlStructures::ProhibitCStyleForLoops]
+
+[ControlStructures::ProhibitCascadingIfElse]
+  max_elsif = 4
+
+[Perl::Critic::Policy::ControlStructures::ProhibitNegativeExpressionsInUnlessAndUntilConditions]
+
+[Perl::Critic::Policy::ControlStructures::ProhibitUnreachableCode]
+
+[Perl::Critic::Policy::Documentation::PodSpelling]
+
+[Perl::Critic::Policy::Documentation::RequirePackageMatchesPodName]
+
+[Perl::Critic::Policy::Documentation::RequirePodAtEnd]
+
+[InputOutput::ProhibitBacktickOperators]
+
+[Perl::Critic::Policy::InputOutput::ProhibitReadlineInForLoop]
+
+[Perl::Critic::Policy::InputOutput::RequireBracedFileHandleWithPrint]
+  severity = 5
+
+[Perl::Critic::Policy::InputOutput::RequireBriefOpen]
+  severity = 4
+
+
+[Modules::RequireEndWithOne]
+  severity = 1
+
+[Perl::Critic::Policy::Objects::ProhibitIndirectSyntax]
+  forbid = new
+
+[Perl::Critic::Policy::References::ProhibitDoubleSigils]
+
+[RegularExpressions::ProhibitCaptureWithoutTest]
+
+[Perl::Critic::Policy::RegularExpressions::ProhibitEnumeratedClasses]
+
+[Perl::Critic::Policy::RegularExpressions::ProhibitEscapedMetacharacters]
+
+[Perl::Critic::Policy::RegularExpressions::ProhibitFixedStringMatches]
+  severity = 4
+
+[Perl::Critic::Policy::RegularExpressions::ProhibitSingleCharAlternation]
+  severity = 3
+
+[Perl::Critic::Policy::RegularExpressions::ProhibitUnusedCapture]
+  severity = 4
+
+[Perl::Critic::Policy::Subroutines::ProhibitAmpersandSigils]
+  severity = 5
+
+[Perl::Critic::Policy::Subroutines::ProhibitSubroutinePrototypes]
+  severity = 1
+
+[ValuesAndExpressions::ProhibitInterpolationOfLiterals]
+  severity = 3
+
+[TestingAndDebugging::ProhibitNoWarnings]
+  severity = 2
+
+[TestingAndDebugging::RequireUseWarnings]
+  severity = 4

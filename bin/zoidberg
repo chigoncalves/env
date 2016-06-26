@@ -17,17 +17,12 @@ sub new : method {
       .profile
       Examples
       examples
-      Music
-      music
-      Images
-      images
       Public
       Templates
       templates
       Documents
       Pictures
-      Videos
-      videos/;
+	     /;
 
   $self->{unwanted_files} = [];
   for my $file (@uf) {
@@ -35,37 +30,44 @@ sub new : method {
   }
 
   $self->{files_to_link} = {
-      catdir($ENV{SLNC_COD_DIR}, 'emacs-conf') => catdir($ENV{HOME}, '.emacs.d'),
-      catdir($ENV{SLNC_ENV_DIR}, 'ssh_config') => catdir($ENV{HOME}, '.ssh', 'config'),
-      catdir($ENV{SLNC_ENV_DIR}, 'tmux.conf') => catdir($ENV{HOME}, '.tmux.conf'),
-      catdir($ENV{SLNC_ENV_DIR}, 'x11', 'fonts.conf') => catdir($ENV{HOME},
+			    catdir($ENV{CHI_COD_DIR}, 'emacs.d') => catdir($ENV{HOME}, '.emacs.d'),
+
+			    catdir($ENV{CHI_INCUBATOR_DIR}, 'xemacs.d') => catdir($ENV{HOME}, '.xemacs.d'),
+      catdir($ENV{CHI_ENV_DIR}, 'ssh-config') => catdir($ENV{HOME}, '.ssh', 'config'),
+      catdir($ENV{CHI_ENV_DIR}, 'tmux.conf') => catdir($ENV{HOME}, '.tmux.conf'),
+      catdir($ENV{CHI_ENV_DIR}, 'x11', 'fonts.conf') => catdir($ENV{HOME},
       							  '.config',
       							  'fontconfig', 'fonts.conf'),
-      catdir($ENV{SLNC_SHARE_DIR}, 'fonts') => catdir($ENV{HOME}, '.fonts'),
-      catdir($ENV{SLNC_ENV_DIR}, qw (shell zshrc)) => catdir($ENV{HOME}, '.zshrc'),
-      catdir($ENV{SLNC_SHARE_DIR}, qw (ccl-1.11 lx86cl64)) => catdir ($ENV{SLNC_BIN_DIR}, 'ccl'),
-      catdir ($ENV{SLNC_ENV_DIR}, qw (lsp abcl-completions)) => catdir ($ENV{HOME}, '.abcl-completions'),
-      catdir($ENV{SLNC_ENV_DIR}, qw (lsp abclrc)) => catdir ($ENV{HOME}, '.abclrc'),
-      catdir($ENV{SLNC_ENV_DIR}, qw (lsp ccl-init.lisp)) => catdir ($ENV{HOME}, '.ccl-init.lisp'),
-      catdir($ENV{SLNC_ENV_DIR}, qw (lsp sbclrc)) => catdir ($ENV{HOME}, '.sbclrc'),
-      catdir($ENV{SLNC_ENV_DIR}, qw (lsp clisprc.lisp)) => catdir ($ENV{HOME}, '.clisprc.lisp'),
-      catdir($ENV{SLNC_ENV_DIR}, 'hgrc') => catdir ($ENV{HOME}, '.hgrc'),
-      catdir($ENV{SLNC_ENV_DIR}, 'gitconfig') => catdir ($ENV{HOME}, '.gitconfig'),
-      catdir($ENV{SLNC_ENV_DIR}, 'perlcriticrc') => catdir ($ENV{HOME}, '.perlcriticrc'),
-      catdir($ENV{SLNC_ENV_DIR}, 'readline.conf') => catdir ($ENV{HOME}, '.readline.conf'),
-      catdir ($ENV{SLNC_SHARE_DIR}, 'icons') => catdir ($ENV{HOME}, '.icons'),
+      catdir($ENV{CHI_SHARE_DIR}, 'fonts') => catdir($ENV{HOME}, '.fonts'),
+      catdir($ENV{CHI_ENV_DIR}, qw (shell zshrc)) => catdir($ENV{HOME}, '.zshrc'),
+      catdir($ENV{CHI_SHARE_DIR}, qw (ccl-1.11 lx86cl64)) => catdir ($ENV{CHI_BIN_DIR}, 'ccl'),
+      catdir ($ENV{CHI_ENV_DIR}, qw (lsp abcl-completions)) => catdir ($ENV{HOME}, '.abcl-completions'),
+      catdir($ENV{CHI_ENV_DIR}, qw (lsp abclrc)) => catdir ($ENV{HOME}, '.abclrc'),
+      catdir($ENV{CHI_ENV_DIR}, qw (lsp ccl-init.lisp)) => catdir ($ENV{HOME}, '.ccl-init.lisp'),
+      catdir($ENV{CHI_ENV_DIR}, qw (lsp sbclrc)) => catdir ($ENV{HOME}, '.sbclrc'),
+      catdir($ENV{CHI_ENV_DIR}, qw (lsp clisprc.lisp)) => catdir ($ENV{HOME}, '.clisprc.lisp'),
+      catdir($ENV{CHI_ENV_DIR}, 'hgrc') => catdir ($ENV{HOME}, '.hgrc'),
+      catdir($ENV{CHI_ENV_DIR}, 'gitconfig') => catdir ($ENV{HOME}, '.gitconfig'),
+      catdir($ENV{CHI_ENV_DIR}, 'perlcriticrc') => catdir ($ENV{HOME}, '.perlcriticrc'),
+			    catdir($ENV{CHI_ENV_DIR}, 'readline.conf') => catdir ($ENV{HOME}, '.readline.conf'),
+			    catdir($ENV{CHI_ENV_DIR}, 'wgetrc') => catdir ($ENV{HOME}, '.wgetrc'),
+			    catdir ($ENV{CHI_SHARE_DIR}, 'icons') => catdir ($ENV{HOME}, '.icons'),
+			    catdir ($ENV{CHI_IMAGE_DIR}) => catdir ($ENV{HOME}, 'Images'),
+			    catdir ($ENV{CHI_VIDEO_DIR}) => catdir ($ENV{HOME}, 'Videos'),
+			    catdir ($ENV{CHI_AUDIO_DIR}) => catdir ($ENV{HOME}, 'Music'),
   };
 
-  $self->{wanted_dirs} = [
-      catdir($ENV{SLNC_COD_DIR}, 'tmp'),
+  $self->{wanted_dirs} = [];
+=item foo
       catdir($ENV{HOME}, '.config', 'fontconfig'),
       catdir($ENV{HOME}, '.ssh'),
       catdir($ENV{HOME}, '.ssh', 'var'),
-      catdir ($ENV{SLNC_SHARE_DIR}, 'zeal', 'docset'),
+      catdir ($ENV{CHI_SHARE_DIR}, 'zeal', 'docset'),
       $ENV{PERLBREW_ROOT},
       $ENV{PERL_CPANM_HOME},
-      $ENV{SLNC_BIN_DIR},
-      ];
+      $ENV{CHI_BIN_DIR},
+=cut
+      
 
   $self->{'env'} ={
 		   install => {
@@ -80,8 +82,8 @@ sub new : method {
 					    },
 
 			       laravel => {
-					   path => catdir ($ENV{SLNC_BIN_DIR}, 'composer'),
-					   cmd => "curl -sS https://getcomposer.org/installer | php -- --install-dir=$ENV{SLNC_BIN_DIR} --filename=composer",
+					   path => catdir ($ENV{CHI_BIN_DIR}, 'composer'),
+					   cmd => "curl -sS https://getcomposer.org/installer | php -- --install-dir=$ENV{CHI_BIN_DIR} --filename=composer",
 					   after => 'composer global require "laravel/installer"',
 					   },
 			       },
@@ -220,7 +222,7 @@ sub configure() : method {
   }
 
   my $zeal_conf_file = catdir $ENV{HOME}, '.config', 'Zeal', 'Zeal.conf';
-  my $docset_dir = catdir $ENV{SLNC_SHARE_DIR}, 'zeal', 'docset';
+  my $docset_dir = catdir $ENV{CHI_SHARE_DIR}, 'zeal', 'docset';
   if (-e $zeal_conf_file) {
     system "sed -i -e \"s!path=/home/crowseye/.local/share/Zeal/Zeal/docsets!path=$docset_dir!\" $zeal_conf_file";
   }
@@ -237,9 +239,9 @@ my %options = (
 GetOptions('verbose' => \$options{verbose},
            'force' => \$options{force}) or die 'Invalid arguments.';
 
-unless (exists $ENV{SLNC_COD_DIR} and exists $ENV{SLNC_ENV_DIR} and exists $ENV{PERL_CPANM_HOME}
+unless (exists $ENV{CHI_COD_DIR} and exists $ENV{CHI_ENV_DIR} and exists $ENV{PERL_CPANM_HOME}
 	and exists $ENV{PERLBREW_ROOT}) {
-    my @var_names = qw/SLNC_COD_DIR SLNC_ENV_DIR PERL_CPANM_HOME PERLBREW_ROOT/;
+    my @var_names = qw/CHI_COD_DIR CHI_ENV_DIR PERL_CPANM_HOME PERLBREW_ROOT/;
     local $" = '\', \'';
     die "At least one of these variables \'@var_names\' are unset.\n"
 	."Please set them before invoking this script.\n";

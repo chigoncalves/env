@@ -1,26 +1,39 @@
+# -*- mode: sh -*-
+
 export PS1='%F{blue}%U%F{cyan}%n%u%F{magenta}@%f%U%F{blue}%m%f%u%F{red}:%f %F{cyan}%c%f %F{green}%#%f %F{white}'
 export _JAVA_OPTIONS='-Dawt.useSystemAAFontSettings=lcd'
 export PAGER=less
-export SLNC_DIR=~/slnc
-export SLNC_COD_DIR=${SLNC_DIR}/coding
-export SLNC_ENV_DIR=${SLNC_COD_DIR}/env
-export SLNC_LOCAL_DIR=${SLNC_DIR}/local
-export SLNC_SHARE_DIR=${SLNC_LOCAL_DIR}/share
-export SLNC_BIN_DIR=${SLNC_LOCAL_DIR}/bin
-export SLNC_DOC_DIR=${SLNC_LOCAL_DIR}/doc
-export SLNC_PERL_DIR=${SLNC_SHARE_DIR}/perl
+export CHI_DIR=~/chi.d
+export CHI_LIBRARY_DIR=${CHI_DIR}/library
+export CHI_MULTIMEDIA_DIR=${CHI_DIR}/multimedia
+export CHI_IMAGE_DIR=${CHI_MULTIMEDIA_DIR}/image
+export CHI_VIDEO_DIR=${CHI_MULTIMEDIA_DIR}/video
+export CHI_AUDIO_DIR=${CHI_MULTIMEDIA_DIR}/audio
+export CHI_INCUBATOR_DIR=${CHI_DIR}/incubator
+export CHI_COD_DIR=${CHI_DIR}/coding
+export CHI_ENV_DIR=${CHI_COD_DIR}/env.d
+export CHI_LOCAL_DIR=${CHI_DIR}/local
+export CHI_SHARE_DIR=${CHI_LOCAL_DIR}/share
+export CHI_BIN_DIR=${CHI_LOCAL_DIR}/bin
+export CHI_DOC_DIR=${CHI_LOCAL_DIR}/doc
+export CHI_PERL_DIR=${CHI_SHARE_DIR}/perl
+export CHI_OPT_DIR=${CHI_DIR}/opt
+export CHI_QT5_VERSION=5.7
+export CHI_QT5_DIR=${CHI_OPT_DIR}/qt
+export CHI_OPT_BIN_DIR=${CHI_OPT_DIR}/bin
+export CHI_QT5_BIN_DIR=${CHI_QT5_DIR}/${CHI_QT5_VERSION}/gcc_64/bin
 export HISTSIZE=5000
 export SAVEHIST=3000
-export HISTFILE=~/.zsh_history
+export HISTFILE=~/.zsh-history
 export PS2='%F{yellow}...%f '
 export BROWSER=firefox
-export VISUAL=emacs
-export EDITOR=emacs
-export PERL_CPANM_HOME=${SLNC_PERL_DIR}/cpanm
-export PERLBREW_ROOT=${SLNC_PERL_DIR}/perlbrew
+export VISUAL=gemacs
+export EDITOR=gemacs
+export PERL_CPANM_HOME=${CHI_PERL_DIR}/cpanm
+export PERLBREW_ROOT=${CHI_PERL_DIR}/perlbrew
+export PERL5LIB="${PERL_CPANM_HOME}/lib/perl5"e
+xport PERL_LOCAL_LIB_ROOT="${PERL_CPANM_HOME}:$PERL_LOCAL_LIB_ROOT"
 export PERL_MB_OPT="--install_base ${PERL_CPANM_HOME}"
 export PERL_MM_OPT="INSTALL_BASE=${PERL_CPANM_HOME}"
-export PERL5LIB="${PERL_CPANM_HOME}/lib/perl5"
-export PERL_LOCAL_LIB_ROOT="${PERL_CPANM_HOME}:$PERL_LOCAL_LIB_ROOT"
-export PATH="${PERLBREW_ROOT}/bin:${PERL_CPANM_HOME}/bin:${SLNC_BIN_DIR}:${SLNC_ENV_DIR}/bin:${HOME}/.local/bin:$PATH"
-export PATH="/home/crowseye/slnc/local/share/evm/bin:${PATH}"
+export PATH="${PERLBREW_ROOT}/bin:${PERL_CPANM_HOME}/bin:${CHI_BIN_DIR}:${CHI_ENV_DIR}/bin:${HOME}/.local/bin:$PATH"
+export PATH="${CHI_QT5_BIN_DIR}:${CHI_OPT_BIN_DIR}:${PATH}"

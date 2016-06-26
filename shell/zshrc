@@ -22,7 +22,7 @@ setopt emacs # Emacs editing mode.
 
 zstyle ':completion:*' rehash true
 
-ABCL_JAR=${SLNC_SHARE_DIR}/abcl-1.3.3/abcl.jar
+ABCL_JAR=${CHI_SHARE_DIR}/abcl-1.3.3/abcl.jar
 JAVA_BIN=/usr/bin/java
 
 alias ipl='perl -de0'
