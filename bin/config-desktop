@@ -46,7 +46,6 @@ sub new : method {
 			    catdir($ENV{CHI_ENV_DIR}, qw (lsp ccl-init.lisp)) => catdir ($ENV{HOME}, '.ccl-init.lisp'),
 			    catdir($ENV{CHI_ENV_DIR}, qw (lsp cmucl-init.lisp)) => catdir ($ENV{HOME}, '.cmucl-init.lisp'),
       catdir($ENV{CHI_ENV_DIR}, qw (lsp sbclrc)) => catdir ($ENV{HOME}, '.sbclrc'),
-      catdir($ENV{CHI_ENV_DIR}, qw (lsp clisprc.lisp)) => catdir ($ENV{HOME}, '.clisprc.lisp'),
       catdir($ENV{CHI_ENV_DIR}, 'hgrc') => catdir ($ENV{HOME}, '.hgrc'),
       catdir($ENV{CHI_ENV_DIR}, 'gitconfig') => catdir ($ENV{HOME}, '.gitconfig'),
       catdir($ENV{CHI_ENV_DIR}, 'perlcriticrc') => catdir ($ENV{HOME}, '.perlcriticrc'),

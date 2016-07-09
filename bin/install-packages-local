@@ -19,23 +19,23 @@ function install_perl_packages () {
     curl -L http://install.perlbrew.pl | bash
   fi
 
-  # perlbrew self-upgrade
-  # perlbrew --force install-patchperl
+  perlbrew self-upgrade
+  perlbrew --force install-patchperl
 
-  # declare -a perls=(perl-5.24.0 perl-5.25.1 perl-5.22.2 perl-5.20.3
-  # 		    perl-5.18.4 perl-5.16.3 perl-5.14.4 perl-5.12.5
-  # 		    perl-5.10.1)
+  declare -a perls=(perl-5.24.0 perl-5.25.1 perl-5.22.2 perl-5.20.3
+  		    perl-5.18.4 perl-5.16.3 perl-5.14.4 perl-5.12.5
+  		    perl-5.10.1)
 
-  # for perl in ${perls[@]}; do
-  #   perlbrew --force install ${perl}
-  # done
+  for perl in ${perls[@]}; do
+    perlbrew --force --notest install ${perl}
+  done
 
   declare -a cpan_packages=(Mojolicious Moose Moops Text::Trim
 			    YAML::Tiny)
 
-  # for pkg in ${cpan_packages[@]}; do
-  #   cpanm ${pkg}
-  # done
+  for pkg in ${cpan_packages[@]}; do
+    cpanm ${pkg}
+  done
 }
 
 function install_web_dev_packages () {
@@ -61,5 +61,19 @@ function install_web_dev_packages () {
   done
 }
 
-# install_perl_packages
-# install_web_dev_packages
+function install_sphinx_packages () {
+  declare -a sphinx_packages=(sphinxcontrib-domaintools
+			      sphinxcontrib-cmakedomain
+			      pygments-cl-repl sphinxcontrib-phpdomain
+			      sphinxcontrib-cldomain
+			      sphinxcontrib-makedomain)
+
+  for pkg in ${sphinx_packages[@]}; do
+    pip2 install --user ${pkg}
+  done
+}
+
+install_perl_packages
+install_web_dev_packages
+
+install_sphinx_packages
