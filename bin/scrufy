@@ -116,20 +116,33 @@ while (my $directory = pop @dirs) {
 	  when (/^translate$/) {
 	    my $filename_sufix = undef; # file extension
 
-	    if ($dir_entry =~ /(\.[a-z0-9]+)$/) {
-	      $filename_sufix = $&;
-	      $dir_entry =~ s/$filename_sufix//; # remove sufix from the filename
+	    # transform -liy-
+	    if ($dir_entry =~ s/(?<suffix>\.[a-z0-9]+)$//) {
+	      $filename_sufix = $+{suffix}
 	    }
+
+	    #+Temporary
+	    $dir_entry =~ s/^liy-|-liy\.|-liy-/-library-/g;
 
 	    for my $word (@words) {
 	      $dir_entry =~ s/$word//;
             }
 
-	    $dir_entry =~ s/^(packt|apress|oreilly|aw|cengage.?learning|manning|mgh|microsoft.?press|crc|nsp|course.?technology|create.?space|cup)//gi;
-	    $dir_entry =~ s/^(mk|no.?starch|pearson|sitepoint|springer|wiley|wrox|yale.?university|peachpit|sybex)//gi;
-	    $dir_entry =~ s/^(pup.?start|routledge|skyhorse.?publishing|prentice.?hall|dk-|leanpub|rocky.nook)//gi;
-	    $dir_entry =~ s/\.net-/-dotnet-/ig;
-	    $dir_entry =~ s/^(aw|crc|mp|big.nerd.ranch.guides)//i;
+	    $dir_entry =~ s/^(packt|apress|oreilly|aw|cengage.?learning|
+			      manning|mgh|microsoft.?press|crc|nsp|
+			      course.?technology|create.?space|cup|
+			      mk|no.?starch|pearson|sitepoint|springer|
+			      wiley|wrox|yale.?university|peachpit|sybex|
+			      pup.?start|routledge|skyhorse.?publishing|
+			      prentice.?hall|dk-|leanpub|rocky.nook|
+			      aw|crc|mp|big.nerd.ranch.guides
+			    )//gix;
+
+
+	    my @versions = $dir_entry =~ /(\d+\.\d+)+/g;
+
+	    $dir_entry =~ s/\.net[-._]/-dotnet-/ig;
+	    $dir_entry =~ s/^()//i;
 	    $dir_entry =~ s/(^adobe.adobe)/adobe/i;
 	    $dir_entry =~ s/^[_-]//; # remove dash and underscores at the beginning of filename.
 	    $dir_entry =~ s/\(|\)|`|'//g;
@@ -137,7 +150,7 @@ while (my $directory = pop @dirs) {
 	    # $dir_entry =~ s/\(|\[|\]|\)//g; # strip every thing between braces
 	    $dir_entry =~ s/(\(stereo\))//gi; # strip every thing between braces
 	    $dir_entry =~ s/(\[\d+-\d+\])//g; # strip every thing between braces
-	    $dir_entry =~ s/cplusplus/c\+\+/g;
+	    $dir_entry =~ s/cplusplus/c-plus-plus-/g;
 	    $dir_entry =~ s/\+/-plus/g;
 	    $dir_entry =~ s/#/-sharp/g;
 	    $dir_entry =~ s/&/-and/g;
@@ -145,16 +158,28 @@ while (my $directory = pop @dirs) {
 	    $dir_entry =~ s/-js-/js-/g;
 	    $dir_entry =~ s/c-sharp-/csharp-/g;
 	    $dir_entry =~ s/f-sharp-/fsharp-/g;
-	    $dir_entry =~ s/scene/-sc-/g;
 
 	    $dir_entry =~ s/-{2,}/-/g; # replaces multiple underscore to one.
 	    $dir_entry =~ s/_+/-/g;
-	    if ($filename_sufix =~ /\.(zip|rar|epub|djvu|pdf)/) {
-	      $dir_entry =~ s/\d{9,13}$//g;
+	    if ($filename_sufix =~ /\.(zip|rar|epub|djvu|pdf)$/) {
+	      $dir_entry =~ s/\d{9,13}x?$//g;
 	    }
 
 	    $dir_entry =~ s/(^-|-$)+//g; # removes underscore at the beginning and end of filenames.
 
+
+	    for my $ver (@versions) {
+	      my $conv_ver = $ver;
+	      $conv_ver =~ s/\./-/g;
+	      $dir_entry =~ s/$conv_ver/$ver/g;
+	    }
+
+	    my @bad_versions = $dir_entry =~ /(\d+-\d+)+/g;
+	    for my $bad_ver (@bad_versions) {
+	      my $good_ver = $bad_ver;
+	      $good_ver =~ s/-/./g;
+	      $dir_entry =~ s/$bad_ver/$good_ver/;
+	    }
 
 	    $dir_entry .= $filename_sufix if defined $filename_sufix;
 

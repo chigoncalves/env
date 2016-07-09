@@ -1,0 +1,65 @@
+#!/usr/bin/env zsh
+
+function install_perl_packages () {
+  if [ -z ${PERL_CPANM_HOME} ]; then
+    echo "\`PERL_CPANM_HOME' is not set! Nothing will be done."
+    exit 1
+  fi
+
+  if [ ! -x "${PERL_CPANM_HOME}/bin/cpanm" ]; then
+     curl -L https://cpanmin.us | perl - App::cpanminus
+  fi
+
+  if [ -z ${PERLBREW_ROOT} ]; then
+    echo "\`PERLBREW_ROOT' is not set! Nothing will be done."
+    exit 1
+  fi
+
+  if [ ! -x "${PERLBREW_ROOT}/bin/perlbrew" ]; then
+    curl -L http://install.perlbrew.pl | bash
+  fi
+
+  # perlbrew self-upgrade
+  # perlbrew --force install-patchperl
+
+  # declare -a perls=(perl-5.24.0 perl-5.25.1 perl-5.22.2 perl-5.20.3
+  # 		    perl-5.18.4 perl-5.16.3 perl-5.14.4 perl-5.12.5
+  # 		    perl-5.10.1)
+
+  # for perl in ${perls[@]}; do
+  #   perlbrew --force install ${perl}
+  # done
+
+  declare -a cpan_packages=(Mojolicious Moose Moops Text::Trim
+			    YAML::Tiny)
+
+  # for pkg in ${cpan_packages[@]}; do
+  #   cpanm ${pkg}
+  # done
+}
+
+function install_web_dev_packages () {
+  declare -a npm_packages=(grunt-cli jshint csslint)
+
+  for pkg in ${npm_packages[@]}; do
+    npm install -g ${pkg}
+  done
+
+  if [ -z ${CHI_BIN_DIR} ]; then
+    echo "\`CHI_BIN_DIR' is not set! Nothing will be done."
+    exit 1
+  fi
+
+  if [ ! -x "${CHI_BIN_DIR}/composer" ]; then
+    curl -sS https://getcomposer.org/installer | \
+	php -- --install-dir=${CHI_BIN_DIR} --filename=composer
+  fi
+
+  declare -a composer_packages=(laravel/installer phpunit/phpunit)
+  for pkg in ${composer_packages[@]}; do
+    composer global require "${pkg}"
+  done
+}
+
+# install_perl_packages
+# install_web_dev_packages

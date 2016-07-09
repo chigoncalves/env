@@ -1,0 +1,121 @@
+#!/usr/bin/env perl
+
+use 5.020;
+use autodie;
+
+use Fcntl q/:seek/;
+use File::Spec::Functions qw/catdir/;
+use File::Temp qw/:seekable/;
+use File::Copy qw/copy/;
+use Readonly;
+use feature q/signatures/;
+
+no warnings qw/experimental::signatures/;
+
+Readonly::Scalar my $USER => 'edelcides';
+Readonly::Scalar my $HOME_DIR => catdir ('/home', $USER);
+
+sub configure_hostname {
+  open (my $FH, '<', '/etc/hostname');
+  my $line = $FH->getline ();
+  chomp $line;
+
+  return if $line eq 'wave';
+
+  open (my $FH, '>', '/etc/hostname');
+  say {$FH} 'wave';
+}
+
+sub configure_fstab {
+  my $file = catdir '/etc/', 'fstab';
+  Readonly::Scalar my $DRIVE => catdir '/dev', 'sdb1';
+  Readonly::Scalar my $MOUNT_POINT => catdir ($HOME_DIR, 'chi.d');
+  Readonly::Scalar my $FS_TYPE => q/ext4/;
+  Readonly::Scalar my $OPTIONS => q/defaults,noatime/;
+  Readonly::Scalar my $DUMP => 0;
+  Readonly::Scalar my $PASS => 2;
+
+  open (my $FH, '+<', $file);
+  while (my $line = $FH->getline ()) {
+    chomp $line;
+    return if $line =~ m{$DRIVE|$MOUNT_POINT};
+  }
+  seek $FH, 0, SEEK_END;
+  my $fstab_entry = sprintf "%s\t%s\t%s\t%s\t%d\t%d", $DRIVE,
+                                                      $MOUNT_POINT,
+						      $FS_TYPE,
+						      $OPTIONS, $DUMP,
+						      $PASS;
+
+  say {$FH} $fstab_entry;
+}
+
+sub shell_get_actual_name ($name) {
+  my @components = split q{/}, $name;
+
+  return $components[$#components];
+}
+
+sub shell_get_path ($shell_name) {
+
+  $shell_name = shell_get_actual_name lc $shell_name;
+  open (my $FH, '<', '/etc/shells');
+  my $shell_path = undef;
+  while (my $line = <$FH>) {
+    chomp $line;
+    my $shell_entry = shell_get_actual_name $line;
+    if ($shell_name eq $shell_entry) {
+      $shell_path = $line;
+      last;
+    }
+  }
+
+  return -x $shell_path ? $shell_path : undef;
+}
+
+sub configure_user_shell ($user, $shell) {
+  my $shell_path = shell_get_path $shell;
+
+  return unless $shell_path;
+
+  my $passwd_file = catdir '/etc/', 'passwd';
+  my $tmp_file = File::Temp->new (CLEANUP => 1,
+				  TEMPLATE => 'config-env-artifact-XXXXXXXXXXXXXXX',
+				  TMPDIR => 1,
+				  SUFFIX => '.txt');
+
+  copy $passwd_file, $tmp_file->filename;
+  $tmp_file->seek (0, SEEK_SET);
+
+  my $pos = 0;
+  open (my $FH, '>', $passwd_file);
+  while (my $line = $tmp_file->getline ()) {
+    chomp $line;
+
+    if ($line =~ /$user/) {
+      my @user_info = split q/:/, $line;
+      if ($shell_path ne $user_info[6]) {
+	$user_info[6] = $shell_path;
+	$line = join q/:/, @user_info;
+      }
+    }
+    say {$FH} $line;
+  }
+}
+
+sub configure_add_udev_rule ($vendor, $mode, $group) {
+  Readonly::Scalar my $UDEV_FILE => catdir '/etc', 'udev', 'rules.d',
+                                           '51-android.rules';
+  return if -f $UDEV_FILE;
+
+  my $udev_rule = sprintf "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"%s\", MODE=\"0%o\", GROUP=\"%s\"",
+                          $vendor, $mode, $group;
+
+  open (my $FH, '>', $UDEV_FILE);
+  say {$FH} $udev_rule;
+}
+
+configure_hostname ();
+configure_fstab ();
+configure_user_shell ($USER, 'zsh');
+configure_add_udev_rule '22b8', 438, 'plugdev';

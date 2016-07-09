@@ -38,12 +38,13 @@ sub new : method {
       catdir($ENV{CHI_ENV_DIR}, 'x11', 'fonts.conf') => catdir($ENV{HOME},
       							  '.config',
       							  'fontconfig', 'fonts.conf'),
-      catdir($ENV{CHI_SHARE_DIR}, 'fonts') => catdir($ENV{HOME}, '.fonts'),
+			    catdir($ENV{CHI_SHARE_DIR}, 'fonts') => catdir($ENV{HOME}, '.fonts'),
+			    catdir($ENV{CHI_ENV_DIR}, qw (shell zshenv)) => catdir($ENV{HOME}, '.zshenv'),
       catdir($ENV{CHI_ENV_DIR}, qw (shell zshrc)) => catdir($ENV{HOME}, '.zshrc'),
-      catdir($ENV{CHI_SHARE_DIR}, qw (ccl-1.11 lx86cl64)) => catdir ($ENV{CHI_BIN_DIR}, 'ccl'),
       catdir ($ENV{CHI_ENV_DIR}, qw (lsp abcl-completions)) => catdir ($ENV{HOME}, '.abcl-completions'),
       catdir($ENV{CHI_ENV_DIR}, qw (lsp abclrc)) => catdir ($ENV{HOME}, '.abclrc'),
-      catdir($ENV{CHI_ENV_DIR}, qw (lsp ccl-init.lisp)) => catdir ($ENV{HOME}, '.ccl-init.lisp'),
+			    catdir($ENV{CHI_ENV_DIR}, qw (lsp ccl-init.lisp)) => catdir ($ENV{HOME}, '.ccl-init.lisp'),
+			    catdir($ENV{CHI_ENV_DIR}, qw (lsp cmucl-init.lisp)) => catdir ($ENV{HOME}, '.cmucl-init.lisp'),
       catdir($ENV{CHI_ENV_DIR}, qw (lsp sbclrc)) => catdir ($ENV{HOME}, '.sbclrc'),
       catdir($ENV{CHI_ENV_DIR}, qw (lsp clisprc.lisp)) => catdir ($ENV{HOME}, '.clisprc.lisp'),
       catdir($ENV{CHI_ENV_DIR}, 'hgrc') => catdir ($ENV{HOME}, '.hgrc'),
@@ -67,43 +68,12 @@ sub new : method {
       $ENV{PERL_CPANM_HOME},
       $ENV{CHI_BIN_DIR},
 =cut
-      
+
 
   $self->{'env'} ={
-		   install => {
-			       cpanminus => {
-					     path => catdir ($ENV{PERL_CPANM_HOME}, 'bin', 'cpanm') ,
-					     cmd => '\curl -L https://cpanmin.us | perl - App::cpanminus',
-					     },
+		   install => { },
 
-			       perlbrew => {
-					    path => catdir ($ENV{PERLBREW_ROOT}, 'bin', 'perlbrew'),
-					    cmd => '\curl -L http://install.perlbrew.pl | bash',
-					    },
-
-			       laravel => {
-					   path => catdir ($ENV{CHI_BIN_DIR}, 'composer'),
-					   cmd => "curl -sS https://getcomposer.org/installer | php -- --install-dir=$ENV{CHI_BIN_DIR} --filename=composer",
-					   after => 'composer global require "laravel/installer"',
-					   },
-			       },
-
-
-		   check => {
-			     'android-udev' => {
-						path => '/etc/udev/rules.d/51-android.rules',
-						'warn-msg' => '`udev` rules for Android is missing.',
-						},
-
-			     'clang-alternative' => {
-						     path => '/usr/bin/clang',
-						     'warn-msg' => '`clang` alternative is not set! For more info see `update-alternatives(1)`.',
-						     },
-			     laravel => {
-					 path => "$ENV{HOME}/.composer/vendor/bin/laravel",
-					 'warn-msg' => '`laravel` is missing. Run `composer global require "laravel/installer"` to install it.',
-					 },
-			     },
+		   check => {  },
 		   };
 
   bless $self, $class;
