@@ -1,0 +1,49 @@
+---
+config-desktop:
+  - unwanted-files:
+      - .bash_history
+      - .bashrc
+      - .profile
+      - Examples
+      - examples
+      - Public
+      - Templates
+      - templates
+      - Documents
+      - Pictures
+
+  - wanted-dirs:
+      - $XDG_CONFIG_HOME$/fontconfig
+      - .ssh
+      - .ssh/var
+      - $CHI_SHARE_DIR$/zeal/docset
+      - $PERLBREW_ROOT$
+      - $PERL_CPANM_HOME$
+      - $CHI_BIN_DIR$
+
+  - files-to-link:
+      - $CHI_COD_DIR$/emacs.d: _self
+      - $CHI_INCUBATOR_DIR$/xemacs.d: _self
+      - ssh-config: .ssh/ssh_config
+      - tmux.conf : _self
+      - x11/fonts.conf: $XDG_CONFIG_HOME$/fontconfig/fonts.conf
+      - shell/zshenv: _self
+      - shell/zshrc: _self
+      - lsp/abcl-completions: _self
+      - lsp/abclrc: _self
+      - lsp/ccl-init.lisp: _self
+      - lsp/cmucl-init.lisp: _self
+      - lsp/sbclrc: _self
+      - hgrc: _self
+      - gitconfig: _self
+      - perlcriticrc: _self
+      - readline.conf: _self
+      - wgetrc: _self
+      - $CHI_SHARE_DIR$/icons: _self
+      - $CHI_IMAGE_DIR$: Images
+      - $CHI_VIDEO_DIR$: Videos
+      - $CHI_AUDIO_DIR$: Music
+      - csslintrc: _self
+      - npmrc: _self
+      - oclint.yml: .oclint
+      - vimrc: _self

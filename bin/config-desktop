@@ -2,127 +2,223 @@
 
 package EnvConf;
 use 5.012000;
+use warnings;
+use feature qw/signatures/;
+no warnings qw/experimental::signatures/;
 
-use File::Path qw(make_path remove_tree);
-use File::Basename q(dirname);
-use File::Spec::Functions q(catdir);
+use File::Path qw/make_path remove_tree/;
+use File::Basename qw/basename dirname/;
+use File::Spec::Functions qw/catdir/;
 use File::Copy qw/copy move/;
 use File::Temp qw/:seekable/;
+use Getopt::Long;
+use Carp qw/croak carp/;
+use Cwd qw/realpath abs_path/;
+use File::HomeDir;
+use Readonly;
+use YAML::Tiny;
+use Readonly;
 
-sub new : method {
-  my ($class, $self) = @_;
+Readonly::Scalar my $BASE_PATH => dirname dirname realpath __FILE__;
 
-  my @uf = qw/history
-      .bash_history
-      .bashrc
-      .profile
-      Examples
-      examples
-      Public
-      Templates
-      templates
-      Documents
-      Pictures
-	     /;
+sub new {
+  my $class = shift;
 
-  $self->{unwanted_files} = [];
-  for my $file (@uf) {
-      push @{$self->{unwanted_files}}, catdir ($ENV{HOME}, $file);
+  my @vars = qw/CHI_COD_DIR CHI_ENV_DIR PERL_CPANM_HOME
+		PERLBREW_ROOT/;
+
+  for my $var (@vars) {
+    unless (exists $ENV{$var}) {
+      croak "Environment variable `$var' is not set.";
+    }
   }
 
-  $self->{files_to_link} = {
-			    catdir($ENV{CHI_COD_DIR}, 'emacs.d') => catdir($ENV{HOME}, '.emacs.d'),
-
-			    catdir($ENV{CHI_INCUBATOR_DIR}, 'xemacs.d') => catdir($ENV{HOME}, '.xemacs.d'),
-      catdir($ENV{CHI_ENV_DIR}, 'ssh-config') => catdir($ENV{HOME}, '.ssh', 'config'),
-      catdir($ENV{CHI_ENV_DIR}, 'tmux.conf') => catdir($ENV{HOME}, '.tmux.conf'),
-      catdir($ENV{CHI_ENV_DIR}, 'x11', 'fonts.conf') => catdir($ENV{HOME},
-      							  '.config',
-      							  'fontconfig', 'fonts.conf'),
-			    catdir($ENV{CHI_SHARE_DIR}, 'fonts') => catdir($ENV{HOME}, '.fonts'),
-			    catdir($ENV{CHI_ENV_DIR}, qw (shell zshenv)) => catdir($ENV{HOME}, '.zshenv'),
-      catdir($ENV{CHI_ENV_DIR}, qw (shell zshrc)) => catdir($ENV{HOME}, '.zshrc'),
-      catdir ($ENV{CHI_ENV_DIR}, qw (lsp abcl-completions)) => catdir ($ENV{HOME}, '.abcl-completions'),
-      catdir($ENV{CHI_ENV_DIR}, qw (lsp abclrc)) => catdir ($ENV{HOME}, '.abclrc'),
-			    catdir($ENV{CHI_ENV_DIR}, qw (lsp ccl-init.lisp)) => catdir ($ENV{HOME}, '.ccl-init.lisp'),
-			    catdir($ENV{CHI_ENV_DIR}, qw (lsp cmucl-init.lisp)) => catdir ($ENV{HOME}, '.cmucl-init.lisp'),
-      catdir($ENV{CHI_ENV_DIR}, qw (lsp sbclrc)) => catdir ($ENV{HOME}, '.sbclrc'),
-      catdir($ENV{CHI_ENV_DIR}, 'hgrc') => catdir ($ENV{HOME}, '.hgrc'),
-      catdir($ENV{CHI_ENV_DIR}, 'gitconfig') => catdir ($ENV{HOME}, '.gitconfig'),
-      catdir($ENV{CHI_ENV_DIR}, 'perlcriticrc') => catdir ($ENV{HOME}, '.perlcriticrc'),
-			    catdir($ENV{CHI_ENV_DIR}, 'readline.conf') => catdir ($ENV{HOME}, '.readline.conf'),
-			    catdir($ENV{CHI_ENV_DIR}, 'wgetrc') => catdir ($ENV{HOME}, '.wgetrc'),
-			    catdir ($ENV{CHI_SHARE_DIR}, 'icons') => catdir ($ENV{HOME}, '.icons'),
-			    catdir ($ENV{CHI_IMAGE_DIR}) => catdir ($ENV{HOME}, 'Images'),
-			    catdir ($ENV{CHI_VIDEO_DIR}) => catdir ($ENV{HOME}, 'Videos'),
-			    catdir ($ENV{CHI_AUDIO_DIR}) => catdir ($ENV{HOME}, 'Music'),
+  my $self = {
+	      'config-file' => catdir ($BASE_PATH,
+				       'config-options.yml'),
+	      verbose => 0,
+	      force => 0,
+	      'unwanted-dirs' => [],
+	      'wanted-dirs' => [],
+	      'files-to-link' => {},
   };
 
-  $self->{wanted_dirs} = [];
+  my $doc= YAML::Tiny->read ($self->{'config-file'});
+  $self->{doc} = $doc->[0]->{'config-desktop'};
 
-      catdir($ENV{HOME}, '.config', 'fontconfig'),
-      catdir($ENV{HOME}, '.ssh'),
-      catdir($ENV{HOME}, '.ssh', 'var'),
-      catdir ($ENV{CHI_SHARE_DIR}, 'zeal', 'docset'),
-      $ENV{PERLBREW_ROOT},
-      $ENV{PERL_CPANM_HOME},
-      $ENV{CHI_BIN_DIR},
+  my $parser = Getopt::Long::Parser->new;
+  $parser->configure (qw/bundling no_ignore_case/);
+  my $status = $parser->getoptions ('verbose|v' => \$self->{verbose},
+		       'force|f' => \$self->{force},
+		       'config-file|c=s' => \$self->{'config-file'},
+		       );
 
-
-
-  $self->{'env'} ={
-		   install => { },
-
-		   check => {  },
-		   };
+  croak "Invalid option" unless $status;
 
   bless $self, $class;
 }
 
-# perform some pre initializations such as remove dummy files.
-sub pre_configure() {
+sub setup_unwanted_files {
   my $self = shift;
 
-  for my $dir (@{$self->{wanted_dirs}}) {
-    if (-d $dir) {
-      say("`$dir` exists. Nothing will be done.") if $self->{verbose};
+  for my $config_options (@{$self->{doc}->[0]->{'config-desktop'}}) {
+    for my $element (@{$config_options->{'unwanted-files'}}) {
+      $element = catdir (File::HomeDir->my_home, $element);
+      push @{$self->{'unwanted-files'}}, $element;
+    }
+  }
+}
+
+sub get_variable {
+  my ($self, $str) = @_;
+  if ($str =~ m|(?<var_fake_name>\$(?<var_real_name>\w+)\$)|) {
+    my ($fake_name, $real_name) = (quotemeta ($+{var_fake_name}),
+				   $+{var_real_name},);
+    if (exists $ENV{$real_name}) {
+      my $real_path = realpath $ENV{$real_name};
+      my $src_path = $str;
+      $src_path =~ s|$fake_name|$real_path|;
+      return {
+	      'value' => $real_path,
+	      'quoted-name' => $fake_name,
+      };
+    } else {
+      carp "Environment variable `$real_name' does not exist.";
+      next;
+    }
+  }
+  else {
+    return undef;
+  }
+}
+
+sub setup_targets_and_links {
+  my $self = shift;
+
+  for my $ref (@{$self->{doc}->[2]->{'files-to-link'}}) {
+    for my $file (keys %{$ref}) {
+      my ($src_path, $dst_path)= ($file, $ref->{$file});
+      my $src_path_info = $self->get_variable ($file);
+
+      if ($src_path_info) {
+	$src_path =~
+	  s|$src_path_info->{'quoted-name'}|$src_path_info->{value}|;
+      } else {
+	$src_path = catdir $BASE_PATH, $file;
+      }
+
+      my $dst_path_info = $self->get_variable ($dst_path);
+      if ($dst_path_info) {
+	$dst_path =~
+	  s|$dst_path_info->{'quoted-name'}|$dst_path_info->{value}|;
+      }
+
+      if ($dst_path =~ m|(?<invisible>_)?self$|) {
+	my $name = basename $src_path;
+	$name = ".$name" if defined $+{invisible};
+
+	$dst_path =~ s|(_?self$)|$name|;
+      } elsif ($dst_path =~
+	       m%(?<invisible>^_|(?<sep>/)_)(?<name>\w+$)%) {
+
+	my ($invisible, $name, $sep) = ($+{invisible}, $+{name},
+					$+{sep});
+	if (defined $invisible && defined $sep) {
+	  $dst_path =~ s%/_$name%/.$name%;
+	} else {
+	  $dst_path =~ s!_$name!.$name!;
+	}
+      }
+
+      unless ($dst_path =~ m|^/|) {
+	$dst_path = catdir (File::HomeDir->my_home, $dst_path);
+      }
+
+      ${$self->{'files-to-link'}}{$src_path} = $dst_path;
+    }
+  }
+}
+
+sub setup_wanted_dirs {
+  my $self = shift;
+  for my $item (@{$self->{doc}->[1]->{'wanted-dirs'}}) {
+    if ($item =~ m|(?<var_fake_name>\$(?<var_real_name>\w+)\$)|) {
+      my ($fake_name, $real_name) = (quotemeta ($+{var_fake_name}),
+				     $+{var_real_name},);
+
+      if (exists $ENV{$real_name}) {
+	my $real_path = realpath $ENV{$real_name};
+	$item =~ s|$fake_name|$real_path|;
+	push @{$self->{'wanted-dirs'}}, $item;
+      } else {
+	carp "Environment variable `$real_name' does not exist.";
+      }
     }
     else {
-      make_path($dir);
-      say("Created `$dir`...") if $self->{verbose};
+      push @{$self->{'wanted-dirs'}}, catdir (File::HomeDir->my_home,
+					      $item);
+    }
+  }
+}
+
+sub run {
+  my $self = shift;
+
+  $self->setup_unwanted_files;
+  $self->setup_targets_and_links;
+  $self->setup_wanted_dirs;
+
+  $self->pre_configure;
+  $self->configure;
+}
+
+sub pre_configure {
+  my $self = shift;
+
+  for my $dir (@{$self->{'wanted-dirs'}}) {
+    if (-d $dir && $self->{verbose}) {
+      say "`$dir` exists. Nothing will be done.";
+    }
+    else {
+      make_path $dir;
+      say "Created `$dir`..." if $self->{verbose};
     }
   }
 
-  for my $file (@{$self->{unwanted_files}}) {
+  for my $file (@{$self->{'unwanted-files'}}) {
     if (-d $file) {
      remove_tree $file;
-      say("Removed `$file`...");
+      say "Removed `$file`...";
     }
     elsif (-f $file) {
      unlink $file if -f $file;
-      say("Removed `$file`");
+      say "Removed `$file`";
     }
   }
 
   my @dirs;
-  push @dirs, catdir($ENV{HOME}, '.ssh');
+  push @dirs, catdir (File::HomeDir->my_home, '.ssh');
   while (my $dir = pop @dirs) {
-    opendir(my $DIR_HANDLE, $dir);
+    opendir (my $DIR_HANDLE, $dir);
     while (my $dir_entry = readdir $DIR_HANDLE) {
-      next if ($dir_entry eq '..') or ($dir_entry eq '.');
+      next if $dir_entry eq '..' || $dir_entry eq '.';
 
       $dir_entry = catdir $dir, $dir_entry;
       my $perm_mode = (stat $dir_entry)[2] & 0777;
       if (-f $dir_entry) {
         if ($perm_mode != 0600) {
-         chmod 0600, $dir_entry;
-          say("Fixed permissions of \'$dir_entry\' to 0600") if $self->{verbose};
+	  chmod 0600, $dir_entry;
+	  if ($self->{verbose}) {
+	    say "Fixed permissions of \'$dir_entry\' to 0600";
+	  }
         }
       }
       elsif (-d $dir_entry) {
         if ($perm_mode != 0700) {
-         chmod 0700, $dir_entry;
-          say("Fixed premissions of \'$dir_entry\' to 0700") if $self->{verbose};
+	  chmod 0700, $dir_entry;
+	  if ($self->{verbose}) {
+	    say "Fixed premissions of \'$dir_entry\' to 0700";
+	  }
         }
         push @dirs, $dir_entry;
       }
@@ -131,64 +227,44 @@ sub pre_configure() {
   }
 }
 
-sub configure() : method {
+sub configure {
   my $self = shift;
 
   if ($self->{force}) {
-    for my $src (keys %{$self->{files_to_link}}) {
-      my $dest = ${$self->{files_to_link}}{$src};
+    for my $src (keys %{$self->{'files-to-link'}}) {
+      my $dest = ${$self->{'files-to-link'}}{$src};
       if (-f $dest) {
         unlink $dest;
-        say("Removed file \'$dest\'.");
+        say "Removed file \'$dest\'." if $self->{verbose};
       }
       elsif (-d $dest) {
         remove_tree $dest;
-        say("Removed directory \'$dest\'.");
+        say "Removed directory \'$dest\'." if $self->{verbose};
       }
     }
   }
 
-  my %ftl = %{$self->{files_to_link}};
+  my %ftl = %{$self->{'files-to-link'}};
   while (my ($file, $link) = each %ftl) {
     if (-l $link) {
-      my $target = readlink $link;
-      next if $target eq $file && !$self->{force};
-      unlink $link;
-      say "Removed link: `$link`.";
+      # my $target = readlink $link;
+      # next if $target eq $file && !$self->{force};
+      # unlink $link;
+      # say "Removed link: `$link`." if $self->{verbose};
     }
     elsif (-f $link) {
       unlink $link;
-      say "Removed file: `$link`.";
+      say "Removed file: `$link`." if $self->{verbose};
     }
     elsif (-d $link) {
       remove_tree $link;
-      say "Removed directory: `$link`.";
+      say "Removed directory: `$link`." if $self->{verbose};
     }
 
     if (! -e $link || $self->{force}) {
       symlink $file, $link;
       say "Created symlink: `$link`." if $self->{verbose};
     }
-  }
-
-  my %env = %{${$self}{env}};
-  my %install = %{$env{install}};
-  my %check = %{$env{check}};
-
-  for my $name (keys %install) {
-    unless (-e $install{$name}{path}) {
-      say ('~' x 5, "Installing `$name`...", '~' x 5) if $self->{verbose} ;
-      system " $install{$name}{cmd}";
-      if (exists $install{$name}{after} && defined $install{$name}{after}) {
-	system "$install{$name}{after}";
-      }
-    }
-  }
-
-  for my $name (keys %check) {
-    unless (-e $check{$name}{path}) {
-      say $check{$name}{'warn-msg'};
-   }
   }
 
   my $zeal_conf_file = catdir $ENV{HOME}, '.config', 'Zeal',
@@ -211,24 +287,5 @@ sub configure() : method {
 }
 
 package main;
-use Getopt::Long q/GetOptions/;
 
-my %options = (
-               verbose => 0,
-               force => 0,
-              );
-
-GetOptions('verbose' => \$options{verbose},
-           'force' => \$options{force}) or die 'Invalid arguments.';
-
-unless (exists $ENV{CHI_COD_DIR} and exists $ENV{CHI_ENV_DIR} and exists $ENV{PERL_CPANM_HOME}
-	and exists $ENV{PERLBREW_ROOT}) {
-    my @var_names = qw/CHI_COD_DIR CHI_ENV_DIR PERL_CPANM_HOME PERLBREW_ROOT/;
-    local $" = '\', \'';
-    die "At least one of these variables \'@var_names\' are unset.\n"
-	."Please set them before invoking this script.\n";
-  }
-
-my $env_conf = EnvConf->new(\%options);
-$env_conf->pre_configure();
-$env_conf->configure();
+EnvConf->new->run;

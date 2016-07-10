@@ -3,6 +3,10 @@
  *load-verbose* nil)              ; Disable verbosity when loading files.
 
 #-quicklisp
-(let ((quicklisp-init (merge-pathnames "slnc/local/share/lisp/setup.lisp" (user-homedir-pathname))))
+(let ((quicklisp-init (merge-pathnames "chi.d/local/share/lisp/common-lisp/quicklisp/setup.lisp" (user-homedir-pathname))))
   (when (probe-file quicklisp-init)
     (load quicklisp-init)))
+
+(defun exit ()
+  "An alias for `quit'. Provides another alternative to end non Sly/Slim session."
+  (quit))

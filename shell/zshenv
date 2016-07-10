@@ -1,6 +1,8 @@
 # -*- mode: sh -*-
 
-export PS1='%F{blue}%U%F{cyan}%n%u%F{magenta}@%f%U%F{blue}%m%f%u%F{red}:%f %F{cyan}%c%f %F{green}%#%f %F{white}'
+export PS1="%F{blue}%U%F{cyan}%n%u%F{magenta}@%f%U%F{blue}%m%f%u%F{red}:%f \
+%F{cyan}%c%f %F{green}%#%f %F{white}"
+
 export _JAVA_OPTIONS='-Dawt.useSystemAAFontSettings=lcd'
 export PAGER=less
 export CHI_DIR=~/chi.d
@@ -29,11 +31,31 @@ export PS2='%F{yellow}...%f '
 export BROWSER=firefox
 export VISUAL=gemacs
 export EDITOR=gemacs
+export CHI_CLOJURE_DIR="${CHI_SHARE_DIR}/clj"
+export CHI_LISP_DIR="${CHI_SHARE_DIR}/lisp"
+export CLASSPATH="${CHI_LISP_DIR}/scheme/kawa/kawa-2.1.jar:\
+${CHI_CLOJURE_DIR}/clojure-1.8.0.jar:\
+${CHI_LISP_DIR}/common-lisp/abcl/abcl.jar:\
+${CHI_LISP_DIR}/common-lisp/abcl/abcl-contrib.jar:\
+${CLASSPATH}"
+
+export LEIN_HOME="${CHI_CLJ_DIR}/lein"
+export CHI_PHP_DIR="${CHI_SHARE_DIR}/php"
+export COMPOSER_HOME=${CHI_PHP_DIR}/composer
 export PERL_CPANM_HOME=${CHI_PERL_DIR}/cpanm
 export PERLBREW_ROOT=${CHI_PERL_DIR}/perlbrew
-export PERL5LIB="${PERL_CPANM_HOME}/lib/perl5"e
-xport PERL_LOCAL_LIB_ROOT="${PERL_CPANM_HOME}:$PERL_LOCAL_LIB_ROOT"
+export PERL5LIB="${PERL_CPANM_HOME}/lib/perl5"
+export PERL_LOCAL_LIB_ROOT="${PERL_CPANM_HOME}:$PERL_LOCAL_LIB_ROOT"
 export PERL_MB_OPT="--install_base ${PERL_CPANM_HOME}"
 export PERL_MM_OPT="INSTALL_BASE=${PERL_CPANM_HOME}"
-export PATH="${PERLBREW_ROOT}/bin:${PERL_CPANM_HOME}/bin:${CHI_BIN_DIR}:${CHI_ENV_DIR}/bin:${HOME}/.local/bin:$PATH"
-export PATH="${CHI_QT5_BIN_DIR}:${CHI_OPT_BIN_DIR}:${PATH}"
+export PATH="${PERLBREW_ROOT}/bin:${PERL_CPANM_HOME}/bin:${CHI_BIN_DIR}:\
+${CHI_ENV_DIR}/bin:${HOME}/.local/bin:${CHI_QT5_BIN_DIR}:\
+${CHI_OPT_BIN_DIR}:${COMPOSER_HOME}/vendor/bin:\
+${CHI_LISP_DIR}/common-lisp/cmucl/bin:${CHI_LISP_DIR}/common-lisp/ccl:\
+${CHI_LISP_DIR}/islisp/openlisp:${CHI_LISP_DIR}/eulisp/Bin.x86_64:\
+${CHI_SHARE_DIR}/npm/bin:${CHI_OPT_DIR}/oclint/bin:${PATH}"
+
+
+# Remove duplicates paths in PATH in case of any resourcing.
+export PATH=$(echo ${PATH} | tr -s ':' "\n" | sort -u | tr -s "\n" ':')
+export CLASSPATH=$(echo ${CLASSPATH} | tr -s ':' "\n" | sort -u | tr -s "\n" ':')

@@ -12,7 +12,7 @@ extdiff =
 progress =
 hgext.schemes =
 graphlog =
-
+hgext.gpg=
 
 [color]
 mode = auto

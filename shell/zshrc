@@ -25,14 +25,18 @@ zstyle ':completion:*' rehash true
 ABCL_JAR=${CHI_SHARE_DIR}/abcl-1.3.3/abcl.jar
 JAVA_BIN=/usr/bin/java
 
+CHI_RLWRAP_OPTS="-r -c -b {()[],^%\$#@\"\";:''\\|}"
 alias ipl='perl -de0'
 alias cnf=/usr/lib/command-not-found
+alias kawa='java kawa.repl'
 alias grep='grep --color=auto'
 alias ls='ls --color=auto'
-alias sbcl='rlwrap sbcl'
+alias sbcl='rlwrap ${CHI_RLWRAP_OPTS} sbcl'
 alias ccl='rlwrap ccl'
+alias clj="rlwrap java -cp ${CHI_SHARE_DIR}/clj/clojure-1.8.0.jar clojure.main"
 alias abcl="rlwrap  --remember -c -f ~/.abcl-completions -H ~/.abcl-history -s 1000000 ${JAVA_BIN} -server -Xrs -cp ${ABCL_JAR} org.armedbear.lisp.Main -b"
 alias dl-site='wget --content-disposition --recursive --no-clobber --page-requisites --html-extension --convert-links --restrict-file-names=windows --tries=3 --domains'
+
 
 if [ -e ${PERLBREW_ROOT} ]; then
   source ${PERLBREW_ROOT}/etc/bashrc

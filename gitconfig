@@ -1,6 +1,10 @@
 [user]
-	email = <eatg75@gmail.com>
-	name = Edelcides Gonçalves
+  email = <eatg75@gmail.com>
+  name = Edelcides Gonçalves
 
 [color]
-	ui = auto
+  ui = auto
+[diff]
+	tool = meld
+[difftool]
+	prompt = false
