@@ -30,7 +30,7 @@ function install_perl_packages () {
     perlbrew --force --notest install ${perl}
   done
 
-  declare -a cpan_packages=(Mojolicious Moose Moops Text::Trim
+  declare -a cpan_packages=(Mojolicious Moose Moops Text::Trim Moo
 			    YAML::Tiny)
 
   for pkg in ${cpan_packages[@]}; do

@@ -6,7 +6,8 @@ use 5.012000;
 use File::Path qw(make_path remove_tree);
 use File::Basename q(dirname);
 use File::Spec::Functions q(catdir);
-use File::Copy q/move/;
+use File::Copy qw/copy move/;
+use File::Temp qw/:seekable/;
 
 sub new : method {
   my ($class, $self) = @_;
@@ -58,7 +59,7 @@ sub new : method {
   };
 
   $self->{wanted_dirs} = [];
-=item foo
+
       catdir($ENV{HOME}, '.config', 'fontconfig'),
       catdir($ENV{HOME}, '.ssh'),
       catdir($ENV{HOME}, '.ssh', 'var'),
@@ -66,7 +67,7 @@ sub new : method {
       $ENV{PERLBREW_ROOT},
       $ENV{PERL_CPANM_HOME},
       $ENV{CHI_BIN_DIR},
-=cut
+
 
 
   $self->{'env'} ={
@@ -190,10 +191,22 @@ sub configure() : method {
    }
   }
 
-  my $zeal_conf_file = catdir $ENV{HOME}, '.config', 'Zeal', 'Zeal.conf';
+  my $zeal_conf_file = catdir $ENV{HOME}, '.config', 'Zeal',
+                              'Zeal.conf';
   my $docset_dir = catdir $ENV{CHI_SHARE_DIR}, 'zeal', 'docset';
-  if (-e $zeal_conf_file) {
-    system "sed -i -e \"s!path=/home/crowseye/.local/share/Zeal/Zeal/docsets!path=$docset_dir!\" $zeal_conf_file";
+
+  return unless -f $zeal_conf_file;
+  my $tmp = File::Temp->new (CLEANUP => 1,
+			     TMPDIR => 1,
+			     TEMPLATE => 'dc-artifact-XXXXXXX',
+			     SUFFIX => '.conf');
+  copy $zeal_conf_file, $tmp->filename;
+  $tmp->seek (0, SEEK_SET);
+  open (my $ZEAL_FH, '>', $zeal_conf_file);
+  while (my $line = $tmp->getline ()) {
+    chomp $line;
+    $line =~ s|path=.*|path=$docset_dir|;
+    say {$ZEAL_FH} $line;
   }
 }
 
