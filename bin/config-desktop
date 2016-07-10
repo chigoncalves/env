@@ -18,6 +18,7 @@ use File::HomeDir;
 use Readonly;
 use YAML::Tiny;
 use Readonly;
+use Pod::Usage;
 
 Readonly::Scalar my $BASE_PATH => dirname dirname realpath __FILE__;
 
@@ -41,6 +42,7 @@ sub new {
 	      'unwanted-dirs' => [],
 	      'wanted-dirs' => [],
 	      'files-to-link' => {},
+	      help => 0,
   };
 
   my $doc= YAML::Tiny->read ($self->{'config-file'});
@@ -51,9 +53,10 @@ sub new {
   my $status = $parser->getoptions ('verbose|v' => \$self->{verbose},
 		       'force|f' => \$self->{force},
 		       'config-file|c=s' => \$self->{'config-file'},
-		       );
+                       'help|h' => \$self->{help},);
 
-  croak "Invalid option" unless $status;
+  pod2usage 1 if $self->{help};
+  pod2usage 2 unless $status;
 
   bless $self, $class;
 }
@@ -88,7 +91,7 @@ sub get_variable {
     }
   }
   else {
-    return undef;
+    return;
   }
 }
 
@@ -142,17 +145,9 @@ sub setup_targets_and_links {
 sub setup_wanted_dirs {
   my $self = shift;
   for my $item (@{$self->{doc}->[1]->{'wanted-dirs'}}) {
-    if ($item =~ m|(?<var_fake_name>\$(?<var_real_name>\w+)\$)|) {
-      my ($fake_name, $real_name) = (quotemeta ($+{var_fake_name}),
-				     $+{var_real_name},);
-
-      if (exists $ENV{$real_name}) {
-	my $real_path = realpath $ENV{$real_name};
-	$item =~ s|$fake_name|$real_path|;
-	push @{$self->{'wanted-dirs'}}, $item;
-      } else {
-	carp "Environment variable `$real_name' does not exist.";
-      }
+    my $path_info = $self->get_variable ($item);
+    if ($path_info) {
+      push @{$self->{'wanted-dirs'}}, $path_info->{value};
     }
     else {
       push @{$self->{'wanted-dirs'}}, catdir (File::HomeDir->my_home,
@@ -176,23 +171,26 @@ sub pre_configure {
   my $self = shift;
 
   for my $dir (@{$self->{'wanted-dirs'}}) {
+    my $shortname = $self->filename_shortify ($dir);
+
     if (-d $dir && $self->{verbose}) {
-      say "`$dir` exists. Nothing will be done.";
+      say "File: `$shortname' exists. Nothing will be done." if $self->{verbose};
     }
     else {
       make_path $dir;
-      say "Created `$dir`..." if $self->{verbose};
+      say "Created `$shortname'..." if $self->{verbose};
     }
   }
 
   for my $file (@{$self->{'unwanted-files'}}) {
+    my $shortname = $self->filename_shortify ($file);
     if (-d $file) {
      remove_tree $file;
-      say "Removed `$file`...";
+      say "Removed `$shortname'...";
     }
     elsif (-f $file) {
      unlink $file if -f $file;
-      say "Removed `$file`";
+      say "Removed `$shortname'";
     }
   }
 
@@ -202,14 +200,14 @@ sub pre_configure {
     opendir (my $DIR_HANDLE, $dir);
     while (my $dir_entry = readdir $DIR_HANDLE) {
       next if $dir_entry eq '..' || $dir_entry eq '.';
-
+      my $shortname = $self->filename_shortify ($dir_entry);
       $dir_entry = catdir $dir, $dir_entry;
       my $perm_mode = (stat $dir_entry)[2] & 0777;
       if (-f $dir_entry) {
         if ($perm_mode != 0600) {
 	  chmod 0600, $dir_entry;
 	  if ($self->{verbose}) {
-	    say "Fixed permissions of \'$dir_entry\' to 0600";
+	    say "Fixed permissions of \'$shortname\' to 0600";
 	  }
         }
       }
@@ -217,7 +215,7 @@ sub pre_configure {
         if ($perm_mode != 0700) {
 	  chmod 0700, $dir_entry;
 	  if ($self->{verbose}) {
-	    say "Fixed premissions of \'$dir_entry\' to 0700";
+	    say "Fixed premissions of \'$shortname\' to 0700";
 	  }
         }
         push @dirs, $dir_entry;
@@ -227,43 +225,56 @@ sub pre_configure {
   }
 }
 
+sub filename_shortify {
+  my ($self, $file) = @_;
+
+  my $home = File::HomeDir->my_home;
+
+  $file =~ s|$home|~|;
+
+  return $file;
+}
+
 sub configure {
   my $self = shift;
 
   if ($self->{force}) {
     for my $src (keys %{$self->{'files-to-link'}}) {
       my $dest = ${$self->{'files-to-link'}}{$src};
+      my $shortname = $self->filename_shortify ($dest);
       if (-f $dest) {
         unlink $dest;
-        say "Removed file \'$dest\'." if $self->{verbose};
+
+        say "Removed file `$shortname'." if $self->{verbose};
       }
       elsif (-d $dest) {
         remove_tree $dest;
-        say "Removed directory \'$dest\'." if $self->{verbose};
+        say "Removed directory `$shortname'." if $self->{verbose};
       }
     }
   }
 
   my %ftl = %{$self->{'files-to-link'}};
   while (my ($file, $link) = each %ftl) {
+    my $shortname = $self->filename_shortify ($link);
     if (-l $link) {
-      # my $target = readlink $link;
-      # next if $target eq $file && !$self->{force};
-      # unlink $link;
-      # say "Removed link: `$link`." if $self->{verbose};
+      my $target = readlink $link;
+      next if $target eq $file && !$self->{force};
+      unlink $link;
+      say "Removed link: `$shortname'." if $self->{verbose};
     }
     elsif (-f $link) {
       unlink $link;
-      say "Removed file: `$link`." if $self->{verbose};
+      say "Removed file: `$shortname'." if $self->{verbose};
     }
     elsif (-d $link) {
       remove_tree $link;
-      say "Removed directory: `$link`." if $self->{verbose};
+      say "Removed directory: `$shortname'." if $self->{verbose};
     }
 
     if (! -e $link || $self->{force}) {
       symlink $file, $link;
-      say "Created symlink: `$link`." if $self->{verbose};
+      say "Created symlink: `$shortname'." if $self->{verbose};
     }
   }
 
@@ -289,3 +300,23 @@ sub configure {
 package main;
 
 EnvConf->new->run;
+
+__END__
+
+=head1 NAME
+
+Configure my openSuse desktop.
+
+=head1 SYNOPSIS
+
+config-desktop [OPTIONS]
+
+Options:
+  --help, -h             Print this help message.
+
+  --verbose, -v          Be verbose.
+
+  --force, -f            Force re-link of files.
+
+  --config-file, -c      A YAML file with configurations.
+=cut
