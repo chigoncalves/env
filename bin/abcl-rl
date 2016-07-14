@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+
+if [ -z ${CHI_LISP_DIR} ]; then
+   echo 'You need to set CHI_LISP_DIR before running this script.'
+   exit 1
+fi
+
+export CLASSPATH="${CHI_LISP_DIR}/common-lisp/abcl/abcl.jar:\
+${CHI_LISP_DIR}/common-lisp/abcl/abcl-contrib.jar:${CLASSPATH}"
+
+JAVA_BIN=/usr/bin/java
+RLWRAP_OPTS="-b {()[],^%\$#@\"\";:''\\|}"
+
+if [ $# -eq 0 ]; then
+  exec rlwrap "${RLWRAP_OPTS}" --remember -c -f ~/.abcl-completions \
+-H ~/.abcl-history -s 1000000 ${JAVA_BIN} -server -Xrs org.armedbear.lisp.Main
+else
+  exec ${JAVA_BIN} org.armedbear.lisp.Main "$@"
+fi

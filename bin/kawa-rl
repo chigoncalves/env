@@ -1,0 +1,19 @@
+#!/usr/bin/env zsh
+
+if [ -z ${CHI_LISP_DIR} ]; then
+    echo 'You need to set CHI_LISP_DIR before running this script.'
+    exit 1
+fi
+
+export CLASSPATH="${CHI_LISP_DIR}/scheme/kawa/kawa-2.1.jar:\
+${CLASSPATH}"
+
+JAVA_BIN=/usr/bin/java
+
+RLWRAP_OPTS="-b {()[],^%\$#@\"\";:''\\|}"
+if [ $# -eq 0 ]; then
+  exec rlwrap "${RLWRAP_OPTS}" --remember -s 1000000 ${JAVA_BIN} \
+-server -Xrs kawa.repl
+else
+  exec ${JAVA_BIN} kawa.repl "$@"
+fi
