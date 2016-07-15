@@ -22,16 +22,17 @@ function install_perl_packages () {
   perlbrew self-upgrade
   perlbrew --force install-patchperl
 
-  declare -a perls=(perl-5.24.0 perl-5.25.1 perl-5.22.2 perl-5.20.3
-  		    perl-5.18.4 perl-5.16.3 perl-5.14.4 perl-5.12.5
-  		    perl-5.10.1)
+  declare -a perls=(perl-5.24.0 perl-5.10.1 perl-5.22.2 perl-5.20.3
+  		    perl-5.18.4 perl-5.16.3 perl-5.14.4 perl-5.12.5)
 
   for perl in ${perls[@]}; do
     perlbrew --force --notest install ${perl}
+    perlbrew alias delete ${perl/perl-/v} 2> /dev/null
+    perlbrew alias create ${perl} ${perl/perl-/v}
   done
 
   declare -a cpan_packages=(Mojolicious Moose Moops Text::Trim Moo
-			    YAML::Tiny)
+  			    YAML::Tiny)
 
   for pkg in ${cpan_packages[@]}; do
     cpanm ${pkg}

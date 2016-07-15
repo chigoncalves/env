@@ -11,6 +11,7 @@ config-desktop:
       - templates
       - Documents
       - Pictures
+      - .zsh_history
 
   - wanted-dirs:
       - $XDG_CONFIG_HOME$/fontconfig
@@ -47,3 +48,16 @@ config-desktop:
       - npmrc: _self
       - oclint.yml: .oclint
       - vimrc: _self
+
+  - files-to-copy:
+      - $CHI_SHARE_DIR$/doc/misc/clang-3.8.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/cmake-3.5.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/c-plus-plus-and-c-lib-ref.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/libstdcc-v3.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/man-pages.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/php-security.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/python-2.7.11.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/python-3.5.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/qt5-cadaques-book.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/sdl2.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self
+      - $CHI_SHARE_DIR$/doc/misc/sphinx.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self

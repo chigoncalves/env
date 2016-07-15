@@ -4,21 +4,16 @@ package EnvConf;
 use 5.02000;
 use utf8;
 use warnings;
-use feature qw/signatures/;
-no warnings qw/experimental::signatures/;
 
-use File::Path qw/make_path remove_tree/;
 use File::Basename qw/basename dirname/;
 use File::Spec::Functions qw/catdir/;
-use File::Copy qw/copy move/;
+use File::Copy qw/copy/;
 use File::Temp qw/:seekable/;
 use Getopt::Long;
 use Carp qw/croak carp/;
 use Cwd qw/realpath/;
-use File::HomeDir;
 use Readonly;
 use YAML::Tiny;
-use Readonly;
 use Pod::Usage;
 use Env qw/HOME/;
 
@@ -40,6 +35,7 @@ sub new {
 	      'unwanted-dirs' => [],
 	      'wanted-dirs' => [],
 	      'files-to-link' => {},
+	      'files-to-copy' => {},
   };
 
   my $parser = Getopt::Long::Parser->new;
@@ -64,120 +60,152 @@ sub new {
   $self->{doc} = $doc->[0]->{'config-desktop'};
   $self->{$_} = $options{$_} for keys %options;
 
+  $self->{action} = EnvConf::File::Action->new (%options);
+
   bless $self, $class;
 }
 
-sub setup_unwanted_files {
-  my $self = shift;
+sub setup_files {
+  my ($self, $node_name, $action_fn) = @_;
 
-  for my $config_options (@{$self->{doc}->[0]->{'config-desktop'}}) {
-    for my $element (@{$config_options->{'unwanted-files'}}) {
-      $element = catdir (File::HomeDir->my_home, $element);
-      push @{$self->{'unwanted-files'}}, $element;
+  my @node_content = ();
+  for my $entry (@{$self->{doc}}) {
+    if (ref $entry eq 'HASH') {
+      for my $name (keys %$entry) {
+	if ($name eq $node_name) {
+	  @node_content =  @{$entry->{$name}};
+	  last;
+	}
+      }
+    }
+  }
+
+  for my $sub_node (@node_content) {
+    my $type = ref $sub_node;
+    if ($type) {
+      if ($type eq 'HASH') {
+	for my $key (keys %{$sub_node}) {
+	  my $result = $self->expand_variable ($key, ${$sub_node}{$key});
+	  $action_fn->($self->{action}, $result->{src}, $result->{dest});
+	}
+      }
+    }
+    else {
+      my $result = $self->expand_variable ($sub_node, undef);
+      $action_fn->($self->{action}, $result->{src});
     }
   }
 }
 
-sub get_variable {
-  my ($self, $str) = @_;
-  if ($str =~ m|(?<var_fake_name>\$(?<var_real_name>\w+)\$)|) {
-    my ($fake_name, $real_name) = (quotemeta ($+{var_fake_name}),
-				   $+{var_real_name},);
-    if (exists $ENV{$real_name} && defined $ENV{$real_name}) {
-      my $real_path = $ENV{$real_name};
-      $real_path =~ s|~/|$HOME/|;
-      return {
-	      'value' => $real_path,
-	      'quoted-name' => $fake_name,
-      };
+sub expand_variable {
+  my ($self, $src, $dest) = @_;
+
+  my $result = {
+		'src' => undef,
+		'dest' => undef,
+  };
+
+  if ($src) {
+    my $var_info = $self->get_variable ($src);
+    next unless defined $var_info;
+
+    if (ref $var_info) {
+      for my $name (keys %{$var_info}) {
+	my $quoted_name = ${$var_info->{$name}}{'quoted-name'};
+	my $value = ${$var_info->{$name}}{value};
+
+	$src =~ s|$quoted_name|$value|;
+      }
     }
     else {
-      carp "Environment variable `$real_name' does not exist.";
-      return;
+      if ($dest) {
+	$src = catdir $BASE_PATH, $src;
+      }
+      else {
+	$src = catdir $HOME, $src;
+      }
     }
+
+    $result->{src} = $src;
+  }
+
+  if ($dest) {
+    my $var_info = $self->get_variable ($dest);
+
+    next unless defined $var_info;
+
+    if (ref $var_info) {
+      for my $name (keys %{$var_info}) {
+	my $quoted_name = ${$var_info->{$name}}{'quoted-name'};
+	my $value = ${$var_info->{$name}}{value};
+
+	$dest =~ s|$quoted_name|$value|;
+      }
+    }
+
+    if ($dest =~ m|(?<invisible>_)?self$|) {
+      my $name = basename $src;
+      $name = ".$name" if defined $+{invisible};
+
+      $dest =~ s|(_?self$)|$name|;
+    }
+    elsif ($dest =~
+	     m%(?<invisible>^_|(?<sep>/)_)(?<name>\w+$)%) {
+
+      my ($invisible, $name, $sep) = ($+{invisible}, $+{name},
+				      $+{sep});
+      if (defined $invisible && defined $sep) {
+	$dest =~ s%/_$name%/.$name%;
+      }
+      else {
+	$dest =~ s!_$name!.$name!;
+      }
+    }
+
+    $dest = catdir $HOME, $dest unless $dest =~ m|^/|;
+    $result->{dest} = $dest;
+  }
+
+  return $result;
+}
+
+sub get_variable {
+  my ($self, $str) = @_;
+
+  my %matches = $str =~
+    m|(?<var_fake_name>\$(?<var_real_name>\w+)\$)|g;
+  my %result = ();
+  if (%matches) {
+    for my $var_tmpl_name (keys %matches) {
+      my $real_name = $matches{$var_tmpl_name};
+
+      if (exists $ENV{$real_name} && defined $ENV{$real_name}) {
+	my $value = $ENV{$real_name};
+	$value =~ s|^~/|$HOME/|;
+
+	$result{$real_name} =  {
+				'value' => $value,
+				'quoted-name'
+				   => quotemeta ($var_tmpl_name),
+	};
+
+	# say $result{$real_name}->{value};
+      }
+      else {
+	carp "Environment variable `$real_name' does not exist.";
+	return;
+      }
+    }
+
+    return \%result;
   }
   else {
     return 1;
   }
 }
 
-sub setup_targets_and_links {
-  my $self = shift;
-
-  for my $ref (@{$self->{doc}->[2]->{'files-to-link'}}) {
-    for my $file (keys %{$ref}) {
-      my ($src_path, $dst_path)= ($file, $ref->{$file});
-      my $src_path_info = $self->get_variable ($file);
-
-      next unless defined $src_path_info;
-
-      if (ref $src_path_info) {
-	$src_path =~
-	  s|$src_path_info->{'quoted-name'}|$src_path_info->{value}|;
-      }
-      else {
-	$src_path = catdir $BASE_PATH, $file;
-      }
-
-      my $dst_path_info = $self->get_variable ($dst_path);
-      next unless defined $dst_path_info;
-
-      if (ref $dst_path_info) {
-	$dst_path =~
-	  s|$dst_path_info->{'quoted-name'}|$dst_path_info->{value}|;
-      }
-
-      if ($dst_path =~ m|(?<invisible>_)?self$|) {
-	my $name = basename $src_path;
-	$name = ".$name" if defined $+{invisible};
-
-	$dst_path =~ s|(_?self$)|$name|;
-      }
-      elsif ($dst_path =~
-	       m%(?<invisible>^_|(?<sep>/)_)(?<name>\w+$)%) {
-
-	my ($invisible, $name, $sep) = ($+{invisible}, $+{name},
-					$+{sep});
-	if (defined $invisible && defined $sep) {
-	  $dst_path =~ s%/_$name%/.$name%;
-	}
-	else {
-	  $dst_path =~ s!_$name!.$name!;
-	}
-      }
-
-      unless ($dst_path =~ m|^/|) {
-	$dst_path = catdir (File::HomeDir->my_home, $dst_path);
-      }
-
-      ${$self->{'files-to-link'}}{$src_path} = $dst_path;
-    }
-  }
-}
-
-sub setup_wanted_dirs {
-  my $self = shift;
-  for my $item (@{$self->{doc}->[1]->{'wanted-dirs'}}) {
-    my $path_info = $self->get_variable ($item);
-
-    next unless defined $path_info;
-
-    if (ref $path_info) {
-      push @{$self->{'wanted-dirs'}}, $path_info->{value};
-    }
-    else {
-      push @{$self->{'wanted-dirs'}}, catdir (File::HomeDir->my_home,
-					      $item);
-    }
-  }
-}
-
 sub run {
   my $self = shift;
-
-  $self->setup_unwanted_files;
-  $self->setup_targets_and_links;
-  $self->setup_wanted_dirs;
 
   $self->pre_configure;
   $self->configure;
@@ -186,32 +214,15 @@ sub run {
 sub pre_configure {
   my $self = shift;
 
-  for my $dir (@{$self->{'wanted-dirs'}}) {
-    my $shortname = $self->filename_shortify ($dir);
-
-    if (-d $dir && $self->{verbose}) {
-      say "File: `$shortname' exists. Nothing will be done." if $self->{verbose};
-    }
-    else {
-      make_path $dir;
-      say "Created `$shortname'..." if $self->{verbose};
-    }
-  }
-
-  for my $file (@{$self->{'unwanted-files'}}) {
-    my $shortname = $self->filename_shortify ($file);
-    if (-d $file) {
-     remove_tree $file;
-      say "Removed `$shortname'...";
-    }
-    elsif (-f $file) {
-     unlink $file if -f $file;
-      say "Removed `$shortname'";
-    }
-  }
+  $self->setup_files ('files-to-copy',
+		      \&EnvConf::File::Action::copy_file);
+  $self->setup_files ('unwanted-files',
+		      \&EnvConf::File::Action::unlink);
+  $self->setup_files ('files-to-link', \&EnvConf::File::Action::link);
+  $self->setup_files ('wanted-dirs', \&EnvConf::File::Action::create);
 
   my @dirs;
-  push @dirs, catdir (File::HomeDir->my_home, '.ssh');
+  push @dirs, catdir ($HOME, '.ssh');
   while (my $dir = pop @dirs) {
     opendir (my $DIR_HANDLE, $dir);
     while (my $dir_entry = readdir $DIR_HANDLE) {
@@ -244,9 +255,7 @@ sub pre_configure {
 sub filename_shortify {
   my ($self, $file) = @_;
 
-  my $home = File::HomeDir->my_home;
-
-  $file =~ s|$home|~|;
+  $file =~ s|$HOME|~|;
 
   return $file;
 }
@@ -294,6 +303,10 @@ sub configure {
     }
   }
 
+  while (my ($src, $dest) = each %{$self->{'files-to-copy'}}) {
+    say "src -> $src\ndest ->  $dest";
+  }
+
   my $zeal_conf_file = catdir $ENV{HOME}, '.config', 'Zeal',
                               'Zeal.conf';
   my $docset_dir = catdir $ENV{CHI_SHARE_DIR}, 'zeal', 'docset';
@@ -313,13 +326,103 @@ sub configure {
   }
 }
 
+package EnvConf::File::Action;
+use File::Path qw/make_path remove_tree/;
+use Carp qw/croak carp/;
+use File::Copy qw/copy/;
+
+sub new {
+  my $class = shift;
+  my $self = {
+	      verbose => 0,
+	      force => 0,
+	      @_,
+  };
+
+  bless $self, $class;
+}
+
+sub copy_file {
+  my ($self, $src, $dest) = @_;
+  if (-e $dest) {
+    if ($self->{force}) {
+      unlink $dest;
+      say "Removed `$dest'.";
+    }
+    else {
+      if ($self->{verbose}) {
+	say "File $dest exists, noting will be done.";
+      }
+      return;
+    }
+  }
+
+  copy $src, $dest;
+  say "Copied `$src' -> `$dest'" if $self->{verbose};
+}
+
+sub unlink {
+  my ($self, $file) = @_;
+  if (-f $file) {
+    unlink $file;
+  }
+  elsif (-d $file) {
+    remove_tree $file;
+  }
+  else {
+    return;
+  }
+
+  say "Unlinked `$file'.";
+}
+
+sub link {
+  my ($self, $src, $dest) = @_;
+
+  unless (-e $src) {
+    carp "File `$src' does not exist.";
+    return;
+  }
+
+  if (-l $dest) {
+    my $target = readlink $dest;
+
+    return if $target eq $src && !$self->{force};
+
+    CORE::unlink $dest;
+    say "Removed link:`$dest'.";
+  }
+  elsif (-f $dest) {
+    CORE::unlink $dest;
+    say "Removed file: `$dest'.";
+
+  }
+  elsif (-d $dest) {
+    remove_tree $dest;
+    say "Removed link: `$dest'.";
+  }
+
+  if (! -e $dest) {
+    symlink $src, $dest;
+    say "Created symlink to `$dest'." if $self->{verbose};
+  }
+}
+
+sub create {
+  my ($self, $dir) = @_;
+
+  if (-d $dir) {
+    say "Directory `$dir' exists." if $self->{verbose};
+  }
+  else {
+    make_path $dir;
+    say "Created directory `$dir'.";
+  }
+}
+
 package main;
 
 EnvConf->new->run;
-
-BEGIN {
-
-}
 
 __END__
 
