@@ -1,7 +1,8 @@
 #!/usr/bin/env perl
 
 package EnvConf;
-use 5.012000;
+use 5.02000;
+use utf8;
 use warnings;
 use feature qw/signatures/;
 no warnings qw/experimental::signatures/;
@@ -13,12 +14,13 @@ use File::Copy qw/copy move/;
 use File::Temp qw/:seekable/;
 use Getopt::Long;
 use Carp qw/croak carp/;
-use Cwd qw/realpath abs_path/;
+use Cwd qw/realpath/;
 use File::HomeDir;
 use Readonly;
 use YAML::Tiny;
 use Readonly;
 use Pod::Usage;
+use Env qw/HOME/;
 
 Readonly::Scalar my $BASE_PATH => dirname dirname realpath __FILE__;
 
@@ -35,28 +37,32 @@ sub new {
   }
 
   my $self = {
-	      'config-file' => catdir ($BASE_PATH,
-				       'config-options.yml'),
-	      verbose => 0,
-	      force => 0,
 	      'unwanted-dirs' => [],
 	      'wanted-dirs' => [],
 	      'files-to-link' => {},
-	      help => 0,
   };
-
-  my $doc= YAML::Tiny->read ($self->{'config-file'});
-  $self->{doc} = $doc->[0]->{'config-desktop'};
 
   my $parser = Getopt::Long::Parser->new;
   $parser->configure (qw/bundling no_ignore_case/);
-  my $status = $parser->getoptions ('verbose|v' => \$self->{verbose},
-		       'force|f' => \$self->{force},
-		       'config-file|c=s' => \$self->{'config-file'},
-                       'help|h' => \$self->{help},);
+  my %options = (
+		 'config-file' => catdir ($BASE_PATH,
+					  'config-options.yml'),
+		 verbose => 0,
+		 force => 0,
+		 help => 0,
+  );
 
-  pod2usage 1 if $self->{help};
+  my $status = $parser->getoptions ('verbose|v' => \$options{verbose},
+		       'force|f' => \$options{force},
+		       'config-file|c=s' => \$options{'config-file'},
+                       'help|h' => \$options{help},);
+
+  pod2usage 1 if delete $options{help};
   pod2usage 2 unless $status;
+
+  my $doc= YAML::Tiny->read (delete $options{'config-file'});
+  $self->{doc} = $doc->[0]->{'config-desktop'};
+  $self->{$_} = $options{$_} for keys %options;
 
   bless $self, $class;
 }
@@ -77,21 +83,21 @@ sub get_variable {
   if ($str =~ m|(?<var_fake_name>\$(?<var_real_name>\w+)\$)|) {
     my ($fake_name, $real_name) = (quotemeta ($+{var_fake_name}),
 				   $+{var_real_name},);
-    if (exists $ENV{$real_name}) {
-      my $real_path = realpath $ENV{$real_name};
-      my $src_path = $str;
-      $src_path =~ s|$fake_name|$real_path|;
+    if (exists $ENV{$real_name} && defined $ENV{$real_name}) {
+      my $real_path = $ENV{$real_name};
+      $real_path =~ s|~/|$HOME/|;
       return {
 	      'value' => $real_path,
 	      'quoted-name' => $fake_name,
       };
-    } else {
+    }
+    else {
       carp "Environment variable `$real_name' does not exist.";
-      next;
+      return;
     }
   }
   else {
-    return;
+    return 1;
   }
 }
 
@@ -103,15 +109,20 @@ sub setup_targets_and_links {
       my ($src_path, $dst_path)= ($file, $ref->{$file});
       my $src_path_info = $self->get_variable ($file);
 
-      if ($src_path_info) {
+      next unless defined $src_path_info;
+
+      if (ref $src_path_info) {
 	$src_path =~
 	  s|$src_path_info->{'quoted-name'}|$src_path_info->{value}|;
-      } else {
+      }
+      else {
 	$src_path = catdir $BASE_PATH, $file;
       }
 
       my $dst_path_info = $self->get_variable ($dst_path);
-      if ($dst_path_info) {
+      next unless defined $dst_path_info;
+
+      if (ref $dst_path_info) {
 	$dst_path =~
 	  s|$dst_path_info->{'quoted-name'}|$dst_path_info->{value}|;
       }
@@ -121,14 +132,16 @@ sub setup_targets_and_links {
 	$name = ".$name" if defined $+{invisible};
 
 	$dst_path =~ s|(_?self$)|$name|;
-      } elsif ($dst_path =~
+      }
+      elsif ($dst_path =~
 	       m%(?<invisible>^_|(?<sep>/)_)(?<name>\w+$)%) {
 
 	my ($invisible, $name, $sep) = ($+{invisible}, $+{name},
 					$+{sep});
 	if (defined $invisible && defined $sep) {
 	  $dst_path =~ s%/_$name%/.$name%;
-	} else {
+	}
+	else {
 	  $dst_path =~ s!_$name!.$name!;
 	}
       }
@@ -146,7 +159,10 @@ sub setup_wanted_dirs {
   my $self = shift;
   for my $item (@{$self->{doc}->[1]->{'wanted-dirs'}}) {
     my $path_info = $self->get_variable ($item);
-    if ($path_info) {
+
+    next unless defined $path_info;
+
+    if (ref $path_info) {
       push @{$self->{'wanted-dirs'}}, $path_info->{value};
     }
     else {
@@ -301,6 +317,10 @@ package main;
 
 EnvConf->new->run;
 
+BEGIN {
+
+}
+
 __END__
 
 =head1 NAME
@@ -319,4 +339,5 @@ Options:
   --force, -f            Force re-link of files.
 
   --config-file, -c      A YAML file with configurations.
+
 =cut
