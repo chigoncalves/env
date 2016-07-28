@@ -1,9 +1,6 @@
 # -*- mode: sh -*-
 
-export PS1="%F{blue}%U%F{cyan}%n%u%F{magenta}@%f%U%F{blue}%m%f%u%F{red}:%f \
-%F{cyan}%c%f %F{green}%#%f %F{white}"
-
-export _JAVA_OPTIONS='-Dawt.useSystemAAFontSettings=lcd'
+# export _JAVA_OPTIONS='-Dawt.useSystemAAFontSettings=lcd'
 export PAGER=less
 export CHI_DIR=~/chi.d
 export CHI_LIBRARY_DIR=${CHI_DIR}/library
@@ -20,15 +17,14 @@ export CHI_BIN_DIR=${CHI_LOCAL_DIR}/bin
 export CHI_DOC_DIR=${CHI_LOCAL_DIR}/doc
 export CHI_PERL_DIR=${CHI_SHARE_DIR}/perl
 export CHI_OPT_DIR=${CHI_DIR}/opt
-export CHI_QT5_VERSION=5.7
-export CHI_QT5_DIR=${CHI_OPT_DIR}/qt
+export CHI_Qt5_VERSION=5.7
+export CHI_Qt5_DIR=${CHI_OPT_DIR}/qt
 export CHI_OPT_BIN_DIR=${CHI_OPT_DIR}/bin
-export CHI_QT5_BIN_DIR=${CHI_QT5_DIR}/${CHI_QT5_VERSION}/gcc_64/bin
-export HISTSIZE=5000
-export SAVEHIST=3000
-export HISTFILE=~/.zsh-history
+export CHI_Qt5_BIN_DIR=${CHI_Qt5_DIR}/${CHI_Qt5_VERSION}/gcc_64/bin
 export PS2='%F{yellow}...%f '
 export BROWSER=firefox
+export MAN_POSIXLY_CORRECT=1
+export INFOPATH="${CHI_SHARE_DIR}/doc/misc/info/:${INFOPATH}"
 export VISUAL=gemacs
 export EDITOR=gemacs
 export CHI_CLOJURE_DIR="${CHI_SHARE_DIR}/clj"
@@ -38,8 +34,8 @@ ${CHI_CLOJURE_DIR}/clojure-1.8.0.jar:\
 ${CHI_LISP_DIR}/common-lisp/abcl/abcl.jar:\
 ${CHI_LISP_DIR}/common-lisp/abcl/abcl-contrib.jar:\
 ${CLASSPATH}"
-
-export LEIN_HOME="${CHI_CLJ_DIR}/lein"
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
+export LEIN_HOME="${CHI_CLOJURE_DIR}/lein"
 export CHI_PHP_DIR="${CHI_SHARE_DIR}/php"
 export COMPOSER_HOME=${CHI_PHP_DIR}/composer
 export PERL_CPANM_HOME=${CHI_PERL_DIR}/cpanm
@@ -49,13 +45,17 @@ export PERL_LOCAL_LIB_ROOT="${PERL_CPANM_HOME}:$PERL_LOCAL_LIB_ROOT"
 export PERL_MB_OPT="--install_base ${PERL_CPANM_HOME}"
 export PERL_MM_OPT="INSTALL_BASE=${PERL_CPANM_HOME}"
 export PATH="${PERLBREW_ROOT}/bin:${PERL_CPANM_HOME}/bin:${CHI_BIN_DIR}:\
-${CHI_ENV_DIR}/bin:${HOME}/.local/bin:${CHI_QT5_BIN_DIR}:\
+${CHI_ENV_DIR}/bin:${HOME}/.local/bin:${CHI_Qt5_BIN_DIR}:\
 ${CHI_OPT_BIN_DIR}:${COMPOSER_HOME}/vendor/bin:\
 ${CHI_LISP_DIR}/common-lisp/cmucl/bin:${CHI_LISP_DIR}/common-lisp/ccl:\
 ${CHI_LISP_DIR}/islisp/openlisp:${CHI_LISP_DIR}/eulisp/Bin.x86_64:\
+${CHI_LISP_DIR}/eulisp/Bin.x86_64/:${CHI_LISP_DIR}/scheme/larceny
 ${CHI_SHARE_DIR}/npm/bin:${CHI_OPT_DIR}/oclint/bin:${PATH}"
 
 
-# Remove duplicates paths in PATH in case of any resourcing.
-export PATH=$(echo ${PATH} | tr -s ':' "\n" | sort -u | tr -s "\n" ':')
-export CLASSPATH=$(echo ${CLASSPATH} | tr -s ':' "\n" | sort -u | tr -s "\n" ':')
+# Remove duplicates entries from PATH and CLASSPATH in case of any
+# resourcing.
+export PATH=$(echo ${PATH} | tr -s ':' "\n" | sort -u\
+ | tr -s "\n" ':')
+export CLASSPATH=$(echo ${CLASSPATH} | tr -s ':' "\n" | sort -u \
+| tr -s "\n" ':')

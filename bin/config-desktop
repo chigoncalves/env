@@ -15,7 +15,7 @@ use Cwd qw/realpath/;
 use Readonly;
 use YAML::Tiny;
 use Pod::Usage;
-use Env qw/HOME/;
+use Env qw/HOME XDG_CONFIG_HOME/;
 
 Readonly::Scalar my $BASE_PATH => dirname dirname realpath __FILE__;
 
@@ -324,6 +324,22 @@ sub configure {
     $line =~ s|path=.*|path=$docset_dir|;
     say {$ZEAL_FH} $line;
   }
+
+  my $retext_file = catdir $XDG_CONFIG_HOME, '/ReText project',
+                           'ReText.conf';
+  open (my $RETEXT_FH, '>', $retext_file);
+  my $text = <<RETEXT_CONFIG;
+[General]
+  defaultMarkup = reStructuredText
+  editorFont = Consolas
+  editorFontSize = 10
+  font = Alegreya
+  fontSize = 14
+  highlightCurrentLine = true
+  lineNumbersEnabled = true
+RETEXT_CONFIG
+
+  say {$RETEXT_FH} $text;
 }
 
 package EnvConf::File::Action;

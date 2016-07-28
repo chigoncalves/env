@@ -10,7 +10,7 @@ ${CLASSPATH}"
 
 JAVA_BIN=/usr/bin/java
 
-RLWRAP_OPTS="-b {()[],^%\$#@\"\";:''\\|}"
+RLWRAP_OPTS="-b {()[],^%\$#@\"\";:''\\|} -C kawa -c -r"
 if [ $# -eq 0 ]; then
   exec rlwrap "${RLWRAP_OPTS}" --remember -s 1000000 ${JAVA_BIN} \
 -server -Xrs kawa.repl

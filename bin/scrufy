@@ -5,15 +5,16 @@ use autodie;
 use strict;
 use utf8;
 use feature qw/unicode_strings signatures/;
-no warnings qw/experimental::smartmatch experimental::signatures/;
+no warnings qw/experimental::smartmatch
+	       experimental::signatures/;
 
-use Cwd q(cwd);
-use File::Copy q(move);
-use File::Basename q(basename);
+use Cwd qw/cwd/;
+use File::Copy qw/move/;
+use File::Basename qw/basename/;
 use Getopt::Long q(GetOptions);
-use File::Spec::Functions q(catdir);
-use open qw(:std :utf8);
-use Encode qw(decode_utf8 encode_utf8);
+use File::Spec::Functions qw/catdir/;
+use open qw/:std :utf8/;
+use Encode qw/decode_utf8 encode_utf8/;
 
 my $same_directory = 0;
 my @dirs;

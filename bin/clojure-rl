@@ -9,7 +9,7 @@ export CLASSPATH="${CHI_CLOJURE_DIR}/clojure-1.8.0.jar:${CLASSPATH}"
 
 JAVA_BIN=/usr/bin/java
 
-RLWRAP_OPTS="-b {()[],^%\$#@\"\";:''\\|}"
+RLWRAP_OPTS="-b {()[],^%\$#@\"\";:''\\|} -C clojure -c -r"
 if [ $# -eq 0 ]; then
   exec rlwrap "${RLWRAP_OPTS}" --remember -s 1000000 ${JAVA_BIN} \
 -server -Xrs clojure.main

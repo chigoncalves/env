@@ -1,0 +1,15 @@
+INCLUDE = "$_PEKWM_ETC_PATH/config_system"
+
+Files {
+    Theme = "/usr/share/pekwm/themes/nimbus"
+}
+
+Screen {
+    Workspaces = "3"
+    WorkspacesPerRow = "3"
+    WorkspaceNames = "Left;Midle;Right"
+
+    Placement {
+        Model = "CenteredOnParent Smart MouseNotUnder"
+    }
+}

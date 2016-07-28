@@ -1,0 +1,8 @@
+;;;; -*- scheme -*-
+
+(define xterm-program "gnome-terminal")
+(define browser-program "firefox")
+(setq default-frame-style 'candido)
+
+(system "lxpanel &")
+(system "setxkbmap us -variant dvp")

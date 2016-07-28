@@ -1,0 +1,6 @@
+;; Sawfish user customization -- do not edit by hand!
+;; Use the configurator instead.
+;; sawfish version 1.11, written Thu Jul 14 23:48:19 2016
+
+(custom-set-typed-variable (quote default-frame-style) (quote candido) (quote frame-style))
+(custom-set-typed-variable (quote reload-themes-when-changed) (quote ()) (quote boolean))
