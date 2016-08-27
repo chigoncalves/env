@@ -3,135 +3,274 @@
 use 5.020;
 use autodie;
 
+package EnvConfigurator;
+
 use Fcntl q/:seek/;
 use File::Spec::Functions qw/catdir/;
 use File::Temp qw/:seekable/;
 use File::Copy qw/copy/;
 use Readonly;
 use feature q/signatures/;
+use Getopt::Long;
 
 no warnings qw/experimental::signatures/;
 
 Readonly::Scalar my $USER => 'edelcides';
 Readonly::Scalar my $HOME_DIR => catdir ('/home', $USER);
 
-sub configure_hostname {
+sub new {
+  my $class = shift;
+  my $self = {install_list => [],
+	      remove_list => [],
+	      repositories_list => {},
+	      @_,
+	     };
+
+
+  $self->{user}{home} = catdir ('/home/', $self->{user}->{name});
+
+  bless $self, $class;
+
+  my %options = (install_list => '',
+		 remove_list => '',
+		 repositories_list => '',);
+
+  my $parser = Getopt::Long::Parser->new;
+  $parser->configure (qw/bundling no_ignore_case/);
+  $parser->getoptions ('install-packages-list|i=s' => \$options{install_list},
+		       'remove-packages-list|r=s' => \$options{remove_list},
+		       'repositories-list|s=s' => \$options{repositories_list});
+
+  $self->build_packages_list ('install_list', $options{install_list});
+  $self->build_packages_list ('remove_list', $options{remove_list});
+  $self->build_repositories_list ($options{repositories_list});
+
+  return $self;
+}
+
+sub build_packages_list {
+  my ($self, $list_name, $list_file) = @_;
+
+  if (-f $list_file) {
+    open (my $INPUT, '<', $list_file);
+
+    while (my $line = $INPUT->getline) {
+      chomp $line;
+      push @{$self->{$list_name}}, $line;
+
+    }
+    close $INPUT;
+  }
+}
+
+sub build_repositories_list {
+  my ($self, $file_name) = @_;
+  if (-f $file_name) {
+    open (my $INPUT, '<', $file_name);
+    while (my $line = $INPUT->getline) {
+      chomp $line;
+      my @repo_info = split q/=/, $line;
+      $self->{repositories_list}->{$repo_info[0]} = $repo_info[1];
+    }
+    close $INPUT;
+  }
+}
+
+sub add_repositories {
+  my $self = shift;
+  for my $name (keys %{$self->{repositories_list}}) {
+    say sprintf 'zypper ar -cfg %s %s', $self->{repositories_list}->{$name}, $name;
+  }
+
+  say 'zypper refresh';
+}
+
+sub remove_packages {
+  my $self = shift;
+  for my $name (@{$self->{remove_list}}) {
+    say sprintf 'zypper rl %s', $name;
+    say sprintf 'zypper remove -y %s', $name;
+    say sprintf 'zypper al %s', $name;
+  }
+}
+
+sub install_packages {
+  my $self = shift;
+  say sprintf 'zypper install -y %s', join q/ /, @{$self->{install_list}};
+}
+
+sub run {
+  my $self = shift;
+
+  $self->add_repositories;
+  $self->remove_packages;
+  $self->install_packages;
+  $self->set_hostname;
+  $self->add_fstab_entry;
+  $self->add_udev_rule;
+  $self->add_alternative;
+
+  my $shell = Shell->new ($self->{user}->{shell});
+  $shell->set ($shell->{user}->{name});
+
+  if (exists  $$self->{time}->{ntp}) {
+    system "timedatectl $self->{time}->{ntp}";
+  }
+
+  if (exists $self->{time}->{timezone}) {
+    system "timedatectl set-timezone $self->{time}->{timezone}";
+  }
+
+  if (exists $self->{time}->{localtime}) {
+    system "timedatectl set-local-rtc $self->{time}->{localtime}";
+  }
+}
+
+sub set_hostname {
+  my $self = shift;
   open (my $FH, '<', '/etc/hostname');
   my $line = $FH->getline ();
   chomp $line;
 
-  return if $line eq 'wave';
+  return if $line eq $self->{hostname};
 
   open (my $FH, '>', '/etc/hostname');
-  say {$FH} 'wave';
+  say {$FH} $self->{hostname};
 }
 
-sub configure_fstab {
+sub add_fstab_entry {
+  my $self = shift;
   my $file = catdir '/etc/', 'fstab';
-  Readonly::Scalar my $DRIVE => catdir '/dev', 'sdb1';
-  Readonly::Scalar my $MOUNT_POINT => catdir ($HOME_DIR, 'chi.d');
-  Readonly::Scalar my $FS_TYPE => q/xfs/;
-  Readonly::Scalar my $OPTIONS => q/defaults,noatime/;
-  Readonly::Scalar my $DUMP => 0;
-  Readonly::Scalar my $PASS => 2;
 
-  open (my $FH, '+<', $file);
-  while (my $line = $FH->getline ()) {
+  open (my $FH, '<', $file);
+  while (my $line = $FH->getline) {
     chomp $line;
-    return if $line =~ m{$DRIVE|$MOUNT_POINT};
+    return  if $line =~ m%$self->{fstab}->{device}|$self->{fstab}->{mountpoint}%;
   }
   seek $FH, 0, SEEK_END;
-  my $fstab_entry = sprintf "%s\t%s\t%s\t%s\t%d\t%d", $DRIVE,
-                                                      $MOUNT_POINT,
-						      $FS_TYPE,
-						      $OPTIONS, $DUMP,
-						      $PASS;
-
+  say $self->{user}->{home};
+  my $fstab_entry = sprintf "%s\t%s\t%s\t%s\t%d\t%d", catdir ('/dev',
+							      $self->{fstab}->{device}),
+                                                      catdir ($self->{user}->{home}, $self->{fstab}->{mountpoint}),
+						      $self->{fstab}->{fstype},
+						      join (q/,/, @{$self->{fstab}->{options}}),
+						      $self->{fstab}->{dump},
+						      $self->{fstab}->{pass};
   say {$FH} $fstab_entry;
 }
 
-sub shell_get_actual_name ($name) {
-  my @components = split q{/}, $name;
+sub add_udev_rule {
+  my $self = shift;
+  my $udev_file = catdir '/etc', 'udev', 'rules.d',
+                         '51-android.rules';
 
-  return $components[$#components];
+  return if -f $udev_file;
+
+  my $udev_rule = sprintf "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"%s\", MODE=\"0%o\", GROUP=\"%s\"",
+                          $self->{udev}->{vendor}, $self->{udev}->{mode},
+			  $self->{udev}->{group};
+
+  open (my $FH, '>', $udev_file);
+  say {$FH} $udev_rule;
 }
 
-sub shell_get_path ($shell_name) {
+sub add_alternative {
+  my $self = shift;
+  system "update-alternatives --install /usr/local/bin/emacs emacs /usr/local/bin/gemacs 10"
+}
 
-  $shell_name = shell_get_actual_name lc $shell_name;
+package Shell;
+
+use Carp qw/croak/;
+use File::Temp;
+use File::Spec::Functions qw/catdir/;
+use File::Copy qw/copy/;
+
+sub new {
+  my ($class, $name) = @_;
+  my $self = {
+	      name => undef,
+	      path => undef,
+	     };
+
+  my $get_shell_name = sub ($shell) {
+    my @components = split q{/}, $shell;
+    $components[$#components];
+  };
+
+  $name = $get_shell_name->($name);
+
   open (my $FH, '<', '/etc/shells');
-  my $shell_path = undef;
-  while (my $line = <$FH>) {
-    chomp $line;
-    my $shell_entry = shell_get_actual_name $line;
-    if ($shell_name eq $shell_entry) {
-      $shell_path = $line;
-      last;
+  while (my $excutable = $FH->getline) {
+    chomp $excutable;
+    my $shell_entry = $get_shell_name->($excutable);
+    if ($name eq $shell_entry && -x $excutable) {
+      $self->{name} = $name;
+      $self->{path} = $excutable;
     }
   }
 
-  return -x $shell_path ? $shell_path : undef;
+  unless ($self->{name} && $self->{path}) {
+    croak "Invalid shell \"$name\"."
+  }
+
+  bless $self, $class,
 }
 
-sub configure_user_shell ($user, $shell) {
-  my $shell_path = shell_get_path $shell;
+sub set {
+  my ($self, $user) = @_;
 
-  return unless $shell_path;
-
-  my $passwd_file = catdir '/etc/', 'passwd';
+  my $passwd_file = catdir '/etc', 'passwd';
   my $tmp_file = File::Temp->new (CLEANUP => 1,
-				  TEMPLATE => 'config-env-artifact-XXXXXXXXXXXXXXX',
-				  TMPDIR => 1,
-				  SUFFIX => '.txt');
+  				  TEMPLATE => 'config-env-artifact-XXXXX',
+  				  TMPDIR => 1,
+  				  SUFFIX => '.txt');
 
   copy $passwd_file, $tmp_file->filename;
   $tmp_file->seek (0, SEEK_SET);
 
-  my $pos = 0;
   open (my $FH, '>', $passwd_file);
-  while (my $line = $tmp_file->getline ()) {
+  while (my $line = $tmp_file->getline) {
     chomp $line;
-
     if ($line =~ /$user/) {
       my @user_info = split q/:/, $line;
-      if ($shell_path ne $user_info[6]) {
-	$user_info[6] = $shell_path;
-	$line = join q/:/, @user_info;
+      if ($self->{path} ne $user_info[6]) {
+  	$user_info[6] = $self->{path};
+  	$line = join q/:/, @user_info;
       }
     }
     say {$FH} $line;
   }
 }
 
-sub configure_add_udev_rule ($vendor, $mode, $group) {
-  Readonly::Scalar my $UDEV_FILE => catdir '/etc', 'udev', 'rules.d',
-                                           '51-android.rules';
-  return if -f $UDEV_FILE;
+package main;
 
-  my $udev_rule = sprintf "SUBSYSTEM==\"usb\", ATTR{idVendor}==\"%s\", MODE=\"0%o\", GROUP=\"%s\"",
-                          $vendor, $mode, $group;
+my $configurator = EnvConfigurator->new (user => {
+						  name => 'edelcides',
+						  groups => ['wheel'],
+						  shell => 'zsh',
+						 },
 
-  open (my $FH, '>', $UDEV_FILE);
-  say {$FH} $udev_rule;
-}
+					 time => {
+						  ntp => 1,
+						  timezone => 'Europe/Lisbon',
+						  localtime => 1,
+						 },
 
-sub configure_time (%args) {
-  if (exists  $args{ntp}) {
-    system "timedatectl $args{ntp}";
-  }
+					 udev => {
+						  vendor => '22b8',
+						  mode => '438',
+						  group => 'plugdev',
+						 },
 
-  if (exists $args{time_zone}) {
-    system "timedatectl set-timezone $args{time_zone}";
-  }
-
-  if (exists $args{localtime}) {
-    system "timedatectl set-local-rtc $args{localtime}";
-  }
-}
-
-configure_hostname ();
-configure_fstab ();
-configure_user_shell ($USER, 'zsh');
-configure_add_udev_rule '22b8', 438, 'plugdev';
-
-system "update-alternatives --install /usr/local/bin/emacs emacs /usr/local/bin/gemacs 10"
+					 fstab => {
+						   device => 'sdb1',
+						   fstype => 'xfs',
+						   options => ['defaults', 'noatime'],
+						   dump => 0,
+						   pass => 2,
+						   mountpoint => 'chi.d',
+						  },
+					 hostname => 'wave.lan',
+					);
+$configurator->run;
