@@ -21,35 +21,45 @@ config-desktop:
       - $PERLBREW_ROOT$
       - $PERL_CPANM_HOME$
       - $CHI_BIN_DIR$
+      - $XDG_CONFIG_HOME$/sakura
 
   - files-to-link:
       - $CHI_COD_DIR$/emacs.d: _self
       - $CHI_INCUBATOR_DIR$/xemacs.d: _self
-      - ssh-config: .ssh/ssh_config
+      - ssh-config.conf: .ssh/ssh_config
       - tmux.conf : _self
       - x11/fonts.conf: $XDG_CONFIG_HOME$/fontconfig/fonts.conf
+      - $CHI_SHARE_DIR$/fonts: _self
       - shell/zshenv: _self
       - shell/zshrc: _self
-      - lisp/abcl-completions: _self
-      - lisp/abclrc: _self
+      - lisp/abcl-completions.conf: .abcl-completions
+      - lisp/abclrc.lisp: .abclrc
       - lisp/ccl-init.lisp: _self
       - lisp/cmucl-init.lisp: _self
-      - lisp/sbclrc: _self
-      - hgrc: _self
-      - gitconfig: _self
-      - perlcriticrc: _self
+      - lisp/sbclrc.lisp: .sbclrc
+      - hgrc.conf: .hgrc
+      - gitconfig.conf: .gitconfig
+      - perlcriticrc.conf: .perlcriticrc
       - readline.conf: _self
-      - wgetrc: _self
+      - wgetrc.conf: .wgetrc
       - $CHI_SHARE_DIR$/icons: _self
       - $CHI_IMAGE_DIR$: Images
       - $CHI_VIDEO_DIR$: Videos
       - $CHI_AUDIO_DIR$: Music
-      - csslintrc: _self
-      - npmrc: _self
+      - csslintrc.json: .csslintrc
+      - npmrc.conf: .npmrc
       - oclint.yml: .oclint
-      - vimrc: _self
       - $CHI_COD_DIR$/cproj-cli/cproj: $CHI_BIN_DIR$/self
       - $CHI_LOCAL_DIR$/lib: .local/lib
+      - $CHI_SHARE_DIR$/cask: .cask
+      - scheme/guile.scm: .guile
+      - scheme/kawarc.scm: _self
+      - gdbinit.conf: .gdbinit
+      - lldbinit.conf: .lldbinit
+      - jshintrc.json: .jshintrc
+      - sakura.conf: $XDG_CONFIG_HOME$/sakura/sakura.conf
+
+
 
   - files-to-copy:
       - $CHI_SHARE_DIR$/doc/misc/qch/clang-3.8.qch: $CHI_Qt5_DIR$/Docs/Qt-$CHI_Qt5_VERSION$/self

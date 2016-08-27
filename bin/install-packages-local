@@ -60,6 +60,8 @@ function install_web_dev_packages () {
   for pkg in ${composer_packages[@]}; do
     composer global require "${pkg}"
   done
+
+  pip install jsbeautifier --user
 }
 
 function install_sphinx_packages () {

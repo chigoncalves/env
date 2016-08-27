@@ -52,3 +52,17 @@ export SAVEHIST=3000
 export HISTFILE=~/.zsh-history
 export PS1="%F{blue}%U%F{cyan}%n%u%F{magenta}@%f%U%F{blue}%m%f%u%\
 F{red}:%f %F{cyan}%c%f %F{green}%#%f "
+
+# function dl-site () {
+#   domain=$(echo "$1" | perl -p -E '$_ =~ s!((https?|ftp)://)?(?<domain>.*?)?(/.*)?!!; print $+{domain} }{')
+#   echo "domain -> $domain"
+#   echo "url -> $1"
+
+  # wget --content-disposition --recursive --no-clobber \
+  #      --page-requisites --html-extension --convert-links \
+  #      --restrict-file-names=windows --tries=3 --domains $domain "${@[@]:2:${#@[@]}}"
+# }
+
+# function dl-node () {
+#   dl-site "${@[@]}" --no-parent
+# }

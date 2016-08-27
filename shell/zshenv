@@ -1,6 +1,7 @@
 # -*- mode: sh -*-
 
 # export _JAVA_OPTIONS='-Dawt.useSystemAAFontSettings=lcd'
+# JAVA_HOME
 export PAGER=less
 export CHI_DIR=~/chi.d
 export CHI_LIBRARY_DIR=${CHI_DIR}/library
@@ -21,21 +22,30 @@ export CHI_Qt5_VERSION=5.7
 export CHI_Qt5_DIR=${CHI_OPT_DIR}/qt
 export CHI_OPT_BIN_DIR=${CHI_OPT_DIR}/bin
 export CHI_Qt5_BIN_DIR=${CHI_Qt5_DIR}/${CHI_Qt5_VERSION}/gcc_64/bin
+# export GEM_HOME=
 export PS2='%F{yellow}...%f '
 export BROWSER=firefox
 export MAN_POSIXLY_CORRECT=1
-export INFOPATH="${CHI_SHARE_DIR}/doc/misc/info/:${INFOPATH}"
+export CHI_INFO_DIR="${CHI_SHARE_DIR}/doc/info/"
+export MANPATH="${CHI_SHARE_DIR}/doc/man:${MANPATH}"
+export DICPATH="${CHI_SHARE_DIR}/hunspell/dictionaries:$DICPATH"
+# export QT_STYLE_OVERRIDE=Cleanlooks
+# export QT_QPA_PLATFORMTHEME=qgnomeplatform
 export VISUAL=gemacs
 export EDITOR=gemacs
-export CHI_CLOJURE_DIR="${CHI_SHARE_DIR}/clj"
 export CHI_LISP_DIR="${CHI_SHARE_DIR}/lisp"
+export CHI_CLOJURE_DIR="${CHI_LISP_DIR}/clojure"
+export CHI_JAVA_DIR="${CHI_SHARE_DIR}/java"
+export LEIN_HOME="${CHI_CLOJURE_DIR}/lein"
+# export M2
+export M2_HOME
+export MAVEN_OPTS='-Xms256m -Xmx512m'
 export CLASSPATH="${CHI_LISP_DIR}/scheme/kawa/kawa-2.1.jar:\
 ${CHI_CLOJURE_DIR}/clojure-1.8.0.jar:\
 ${CHI_LISP_DIR}/common-lisp/abcl/abcl.jar:\
 ${CHI_LISP_DIR}/common-lisp/abcl/abcl-contrib.jar:\
 ${CLASSPATH}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
-export LEIN_HOME="${CHI_CLOJURE_DIR}/lein"
 export CHI_PHP_DIR="${CHI_SHARE_DIR}/php"
 export COMPOSER_HOME=${CHI_PHP_DIR}/composer
 export PERL_CPANM_HOME=${CHI_PERL_DIR}/cpanm
@@ -49,8 +59,11 @@ ${CHI_ENV_DIR}/bin:${HOME}/.local/bin:${CHI_Qt5_BIN_DIR}:\
 ${CHI_OPT_BIN_DIR}:${COMPOSER_HOME}/vendor/bin:\
 ${CHI_LISP_DIR}/common-lisp/cmucl/bin:${CHI_LISP_DIR}/common-lisp/ccl:\
 ${CHI_LISP_DIR}/islisp/openlisp:${CHI_LISP_DIR}/eulisp/Bin.x86_64:\
-${CHI_LISP_DIR}/eulisp/Bin.x86_64/:${CHI_LISP_DIR}/scheme/larceny
-${CHI_SHARE_DIR}/npm/bin:${CHI_OPT_DIR}/oclint/bin:${PATH}"
+${CHI_LISP_DIR}/eulisp/Bin.x86_64/:${CHI_LISP_DIR}/scheme/larceny\
+${CHI_SHARE_DIR}/npm/bin:${CHI_OPT_DIR}/oclint/bin:${PATH}:\
+${CHI_JAVA_DIR}/maven/bin:${CHI_JAVA_DIR}/ant/bin:\
+${CHI_JAVA_DIR}/gradle/bin:${CHI_JAVA_DIR}/groovy/bin:\
+${CHI_SHARE_DIR}/cask/bin:/usr/lib/ssh"
 
 
 # Remove duplicates entries from PATH and CLASSPATH in case of any
@@ -59,3 +72,9 @@ export PATH=$(echo ${PATH} | tr -s ':' "\n" | sort -u\
  | tr -s "\n" ':')
 export CLASSPATH=$(echo ${CLASSPATH} | tr -s ':' "\n" | sort -u \
 | tr -s "\n" ':')
+
+export CHI_INFO_DIR=$(echo ${CHI_INFO_DIR} | tr -s ':' "\n" | sort -u\
+| tr -s "\n" ':')
+
+
+## tutorialspoint.com

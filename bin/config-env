@@ -30,7 +30,7 @@ sub configure_fstab {
   my $file = catdir '/etc/', 'fstab';
   Readonly::Scalar my $DRIVE => catdir '/dev', 'sdb1';
   Readonly::Scalar my $MOUNT_POINT => catdir ($HOME_DIR, 'chi.d');
-  Readonly::Scalar my $FS_TYPE => q/ext4/;
+  Readonly::Scalar my $FS_TYPE => q/xfs/;
   Readonly::Scalar my $OPTIONS => q/defaults,noatime/;
   Readonly::Scalar my $DUMP => 0;
   Readonly::Scalar my $PASS => 2;
@@ -115,7 +115,23 @@ sub configure_add_udev_rule ($vendor, $mode, $group) {
   say {$FH} $udev_rule;
 }
 
+sub configure_time (%args) {
+  if (exists  $args{ntp}) {
+    system "timedatectl $args{ntp}";
+  }
+
+  if (exists $args{time_zone}) {
+    system "timedatectl set-timezone $args{time_zone}";
+  }
+
+  if (exists $args{localtime}) {
+    system "timedatectl set-local-rtc $args{localtime}";
+  }
+}
+
 configure_hostname ();
 configure_fstab ();
 configure_user_shell ($USER, 'zsh');
 configure_add_udev_rule '22b8', 438, 'plugdev';
+
+system "update-alternatives --install /usr/local/bin/emacs emacs /usr/local/bin/gemacs 10"
