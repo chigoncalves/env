@@ -66,3 +66,7 @@ F{red}:%f %F{cyan}%c%f %F{green}%#%f "
 # function dl-node () {
 #   dl-site "${@[@]}" --no-parent
 # }
+
+if [ -e "${OPAMROOT}/opam-init/init.zsh" ]; then
+   source "${OPAMROOT}/opam-init/init.zsh"
+fi

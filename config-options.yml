@@ -12,6 +12,7 @@ config-desktop:
       - Documents
       - Pictures
       - .zsh_history
+      - bin
 
   - wanted-dirs:
       - $XDG_CONFIG_HOME$/fontconfig
@@ -22,6 +23,7 @@ config-desktop:
       - $PERL_CPANM_HOME$
       - $CHI_BIN_DIR$
       - $XDG_CONFIG_HOME$/sakura
+      - $XDG_CONFIG_HOME$/ReText project
 
   - files-to-link:
       - $CHI_COD_DIR$/emacs.d: _self
@@ -58,7 +60,8 @@ config-desktop:
       - lldbinit.conf: .lldbinit
       - jshintrc.json: .jshintrc
       - sakura.conf: $XDG_CONFIG_HOME$/sakura/sakura.conf
-
+      - ocamlinit.ml: .ocamlinit
+      - monodevelop: $XDG_CONFIG_HOME$/MonoDevelop-5.0
 
 
   - files-to-copy:

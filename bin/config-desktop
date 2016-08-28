@@ -325,7 +325,7 @@ sub configure {
     say {$ZEAL_FH} $line;
   }
 
-  my $retext_file = catdir $XDG_CONFIG_HOME, '/ReText project',
+  my $retext_file = catdir $XDG_CONFIG_HOME, 'ReText project',
                            'ReText.conf';
   open (my $RETEXT_FH, '>', $retext_file);
   my $text = <<RETEXT_CONFIG;
@@ -333,8 +333,8 @@ sub configure {
   defaultMarkup = reStructuredText
   editorFont = Consolas
   editorFontSize = 10
-  font = Alegreya
-  fontSize = 14
+  font = TeX Gyre Termes
+  fontSize = 12
   highlightCurrentLine = true
   lineNumbersEnabled = true
 RETEXT_CONFIG

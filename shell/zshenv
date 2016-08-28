@@ -37,6 +37,7 @@ export CHI_LISP_DIR="${CHI_SHARE_DIR}/lisp"
 export CHI_CLOJURE_DIR="${CHI_LISP_DIR}/clojure"
 export CHI_JAVA_DIR="${CHI_SHARE_DIR}/java"
 export LEIN_HOME="${CHI_CLOJURE_DIR}/lein"
+export OPAMROOT="${CHI_DIR}/local/lib/ocaml/opam/"
 # export M2
 export M2_HOME
 export MAVEN_OPTS='-Xms256m -Xmx512m'
@@ -59,7 +60,7 @@ ${CHI_ENV_DIR}/bin:${HOME}/.local/bin:${CHI_Qt5_BIN_DIR}:\
 ${CHI_OPT_BIN_DIR}:${COMPOSER_HOME}/vendor/bin:\
 ${CHI_LISP_DIR}/common-lisp/cmucl/bin:${CHI_LISP_DIR}/common-lisp/ccl:\
 ${CHI_LISP_DIR}/islisp/openlisp:${CHI_LISP_DIR}/eulisp/Bin.x86_64:\
-${CHI_LISP_DIR}/eulisp/Bin.x86_64/:${CHI_LISP_DIR}/scheme/larceny\
+${CHI_LISP_DIR}/eulisp/Bin.x86_64/:${CHI_LISP_DIR}/scheme/larceny:\
 ${CHI_SHARE_DIR}/npm/bin:${CHI_OPT_DIR}/oclint/bin:${PATH}:\
 ${CHI_JAVA_DIR}/maven/bin:${CHI_JAVA_DIR}/ant/bin:\
 ${CHI_JAVA_DIR}/gradle/bin:${CHI_JAVA_DIR}/groovy/bin:\
