@@ -20,6 +20,7 @@
         <version>2</version>
         <layout id="" />
         <layout id="Solution" />
+        <layout id="Debug" />
       </DockToolbarFrameStatus>
     </Property>
   </Property>
@@ -41,6 +42,7 @@
     </Property>
     <Property key="AutomaticPackageRestoreOnOpeningSolution" value="True" />
     <Property key="CheckUpdatedPackagesOnOpeningSolution" value="True" />
+    <Property key="PackagesDirectory" value="packages" />
   </Property>
   <Property key="MonoDevelop.Core.Gui.CurrentWorkbenchLayout" value="Solution" />
   <Property key="MonoDevelop.Ide.AddinUpdater.CheckForUpdates" value="False" />

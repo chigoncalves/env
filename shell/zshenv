@@ -66,7 +66,7 @@ ${CHI_JAVA_DIR}/maven/bin:${CHI_JAVA_DIR}/ant/bin:\
 ${CHI_JAVA_DIR}/gradle/bin:${CHI_JAVA_DIR}/groovy/bin:\
 ${CHI_SHARE_DIR}/cask/bin:/usr/lib/ssh"
 
-
+export SSH_ASKPASS=/usr/lib/ssh/gnome-ssh-askpass
 # Remove duplicates entries from PATH and CLASSPATH in case of any
 # resourcing.
 export PATH=$(echo ${PATH} | tr -s ':' "\n" | sort -u\
@@ -77,5 +77,6 @@ export CLASSPATH=$(echo ${CLASSPATH} | tr -s ':' "\n" | sort -u \
 export CHI_INFO_DIR=$(echo ${CHI_INFO_DIR} | tr -s ':' "\n" | sort -u\
 | tr -s "\n" ':')
 
+# eval $(ssh-agent)
 
 ## tutorialspoint.com

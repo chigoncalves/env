@@ -3,7 +3,7 @@
     <group size="300" prefSize="300" defaultHorSize="300" defaultVerSize="250" type="Tabbed" currentTabPage="0">
       <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Ide.Gui.Pads.HelpTree" visible="False" status="Dockable" />
       <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="ClassPad" visible="False" status="AutoHide" autoHidePosition="Left" autoHideSize="200" />
-      <item size="-1" prefSize="-1" defaultHorSize="300" defaultVerSize="250" id="ProjectPad" visible="True" status="Dockable" />
+      <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="ProjectPad" visible="True" status="Dockable" />
       <item size="300" prefSize="300" defaultHorSize="300" defaultVerSize="250" id="__left" visible="False" status="Dockable" />
     </group>
     <group size="1042" prefSize="1042" defaultHorSize="300" defaultVerSize="250" type="Vertical">
@@ -12,18 +12,18 @@
       <group size="250" prefSize="250" defaultHorSize="300" defaultVerSize="250" type="Horizontal">
         <group size="604" prefSize="604" defaultHorSize="300" defaultVerSize="250" type="Tabbed" currentTabPage="0">
           <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.NUnit.TestResultsPad" visible="False" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
-          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="OutputPad-MonoDevelop.Ide.ApplicationOutput-0" visible="True" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
+          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="OutputPad-MonoDevelop.Ide.ApplicationOutput-0" visible="False" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
           <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Ide.Gui.Pads.ErrorListPad" visible="True" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
           <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Ide.Gui.Pads.TaskListPad" visible="True" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
-          <item size="-1" prefSize="-1" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.WatchPad" visible="True" status="Dockable" />
-          <item size="-1" prefSize="-1" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.LocalsPad" visible="True" status="Dockable" />
-          <item size="-1" prefSize="-1" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.BreakpointPad" visible="True" status="Dockable" />
-          <item size="-1" prefSize="-1" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.ThreadsPad" visible="True" status="Dockable" />
+          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.WatchPad" visible="True" status="Dockable" />
+          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.LocalsPad" visible="True" status="Dockable" />
+          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.BreakpointPad" visible="True" status="Dockable" />
+          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.ThreadsPad" visible="True" status="Dockable" />
           <item size="250" prefSize="250" defaultHorSize="300" defaultVerSize="250" id="__bottom" visible="False" status="Dockable" />
         </group>
         <group size="437" prefSize="437" defaultHorSize="300" defaultVerSize="250" type="Tabbed" currentTabPage="0">
-          <item size="-1" prefSize="-1" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.StackTracePad" visible="True" status="Dockable" />
-          <item size="-1" prefSize="-1" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.ImmediatePad" visible="True" status="Dockable" />
+          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.StackTracePad" visible="True" status="Dockable" />
+          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.ImmediatePad" visible="True" status="Dockable" />
         </group>
       </group>
     </group>
@@ -39,16 +39,16 @@
       </group>
     </group>
   </layout>
-  <layout name="Solution" width="1343" height="623" size="1343" prefSize="1343" defaultHorSize="-1" defaultVerSize="-1" type="Horizontal">
+  <layout name="Solution" width="1366" height="646" size="1366" prefSize="1366" defaultHorSize="-1" defaultVerSize="-1" type="Horizontal">
     <group size="300" prefSize="300" defaultHorSize="300" defaultVerSize="250" type="Tabbed" currentTabPage="0">
       <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Ide.Gui.Pads.HelpTree" visible="False" status="Dockable" />
       <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="ClassPad" visible="False" status="AutoHide" autoHidePosition="Left" autoHideSize="200" />
       <item size="-1" prefSize="-1" defaultHorSize="300" defaultVerSize="250" id="ProjectPad" visible="True" status="Dockable" />
       <item size="300" prefSize="300" defaultHorSize="300" defaultVerSize="250" id="__left" visible="False" status="Dockable" />
     </group>
-    <group size="1042" prefSize="1042" defaultHorSize="300" defaultVerSize="250" type="Vertical">
+    <group size="1065" prefSize="1065" defaultHorSize="300" defaultVerSize="250" type="Vertical">
       <item size="250" prefSize="250" defaultHorSize="300" defaultVerSize="250" id="__top" visible="False" status="Dockable" />
-      <item size="623" prefSize="623" defaultHorSize="300" defaultVerSize="250" id="Documents" visible="True" status="Dockable" />
+      <item size="646" prefSize="646" defaultHorSize="300" defaultVerSize="250" id="Documents" visible="True" status="Dockable" />
       <group size="250" prefSize="250" defaultHorSize="300" defaultVerSize="250" type="Horizontal">
         <group size="250" prefSize="250" defaultHorSize="-1" defaultVerSize="-1" type="Tabbed" currentTabPage="0">
           <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Debugger.WatchPad" visible="False" status="Dockable" />
@@ -58,7 +58,7 @@
           <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.NUnit.TestResultsPad" visible="False" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
           <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Ide.Gui.Pads.ErrorListPad" visible="True" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
           <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="MonoDevelop.Ide.Gui.Pads.TaskListPad" visible="True" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
-          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="OutputPad-MonoDevelop.Ide.ApplicationOutput-0" visible="True" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
+          <item size="0" prefSize="0" defaultHorSize="300" defaultVerSize="250" id="OutputPad-MonoDevelop.Ide.ApplicationOutput-0" visible="False" status="AutoHide" autoHidePosition="Bottom" autoHideSize="200" />
           <item size="250" prefSize="250" defaultHorSize="300" defaultVerSize="250" id="__bottom" visible="False" status="Dockable" />
         </group>
         <group size="0" prefSize="0" defaultHorSize="-1" defaultVerSize="-1" type="Tabbed" currentTabPage="0">

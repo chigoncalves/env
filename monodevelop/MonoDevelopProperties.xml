@@ -125,8 +125,6 @@
   <Property key="FontProperties">
     <Property key="Editor" value="Consolas 10" />
   </Property>
-  <Property key="MonoDevelop.TextEditor.Document.Document.DefaultDocumentAggregatorProperties" />
-  <Property key="CodeActionUsages" />
   <Property key="MonoDevelop.Ide.AddinUpdater.TestMode" value="" />
   <Property key="SharpDevelop.CreateBackupCopy" value="False" />
   <Property key="MonoDevelop.Ide.BeforeCompileAction" value="SaveAllFiles" />
@@ -551,4 +549,5 @@
   <Property key="Monodevelop.StackTrace.ShowParameterValue" value="False" />
   <Property key="Monodevelop.StackTrace.ShowLineNumber" value="True" />
   <Property key="MonoDevelop.Shell" value="xterm" />
+  <Property key="MonoDevelop.TextEditor.Document.Document.DefaultDocumentAggregatorProperties" />
 </MonoDevelopProperties>

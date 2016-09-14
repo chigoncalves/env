@@ -1,3 +1,6 @@
 # -*- mode: sh -*-
 
-setxkbmap us -variant dvp
+setxkbmap us -variant dvp -option lv3:ralt_switch
+
+export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+export CHI_EMACS_DAEMON_AUTH_SOCK="$XDG_RUNTIME_DIR/emacs-server.socket"

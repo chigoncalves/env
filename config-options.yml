@@ -28,10 +28,11 @@ config-desktop:
   - files-to-link:
       - $CHI_COD_DIR$/emacs.d: _self
       - $CHI_INCUBATOR_DIR$/xemacs.d: _self
-      - ssh-config.conf: .ssh/ssh_config
+      - secret/ssh-config.conf: .ssh/ssh_config
       - tmux.conf : _self
       - x11/fonts.conf: $XDG_CONFIG_HOME$/fontconfig/fonts.conf
       - $CHI_SHARE_DIR$/fonts: _self
+      - shell/zprofile: _self
       - shell/zshenv: _self
       - shell/zshrc: _self
       - lisp/abcl-completions.conf: .abcl-completions
@@ -62,6 +63,10 @@ config-desktop:
       - sakura.conf: $XDG_CONFIG_HOME$/sakura/sakura.conf
       - ocamlinit.ml: .ocamlinit
       - monodevelop: $XDG_CONFIG_HOME$/MonoDevelop-5.0
+      - secret/ssh: _self
+      - secret/gnupg: _self
+      - katepartrc.conf: $XDG_CONFIG_HOME$/katepartrc
+      - systemd: $XDG_CONFIG_HOME$/systemd
 
 
   - files-to-copy:

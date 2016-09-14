@@ -36,6 +36,7 @@ sub new {
 	      'wanted-dirs' => [],
 	      'files-to-link' => {},
 	      'files-to-copy' => {},
+	      services => ['ssh-agent'],
   };
 
   my $parser = Getopt::Long::Parser->new;
@@ -169,6 +170,13 @@ sub expand_variable {
   return $result;
 }
 
+sub enable_services {
+  my $self = shift;
+  for my $service (@{$self->{services}}) {
+    system "systemctl --user enable $service";
+  }
+}
+
 sub get_variable {
   my ($self, $str) = @_;
 
@@ -209,6 +217,7 @@ sub run {
 
   $self->pre_configure;
   $self->configure;
+  $self->enable_services;
 }
 
 sub pre_configure {
