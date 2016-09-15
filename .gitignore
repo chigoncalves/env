@@ -3,3 +3,5 @@ x11/tinto/icon*
 x11/tinto/text*
 secret/ssh
 secret/gnupg
+*/t/
+*/_t/

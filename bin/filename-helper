@@ -1,0 +1,143 @@
+#!/usr/bin/env perl
+
+
+package FileNameHelper;
+
+use 5.024;
+use autodie;
+use warnings;
+use utf8;
+use feature qw/unicode_strings signatures/;
+use open qw/:std :utf8/;
+
+use Carp qw/croak/;
+use Cwd qw/cwd abs_path/;
+use Encode qw/decode_utf8 encode_utf8/;
+use Env qw/HOME/;
+use Getopt::Long;
+
+
+sub new {
+  my $class = shift;
+  my $self = {
+	      directory => cwd,
+	      recursively => 0,
+	      verbose => 0,
+	      overwrite => 0,
+	      directories => [],
+	     };
+
+  my @args = @main::ARGV;
+  my $parser = Getopt::Long::Parser->new;
+
+  $parser->configure (qw/bundling no_ignore_case/);
+  $parser->getoptionsfromarray (\@args,
+				'directory|d=s' => \$self->{directory},
+				'recursively|r' => \$self->{recursively},
+				'verbose|v' => \$self->{verbose},
+				'overwrite|o' => \$self->{overwrite},
+			       );
+
+  $self->{directory} = abs_path $self->{directory};
+  unless (-d $self->{directory} ) {
+    croak "Error: \"$self->{directory}\" does not exist.";
+  }
+
+  if ($self->{directory} eq $HOME) {
+    croak 'Error: Processing HOME directory is forbidden.';
+  }
+
+  push @{$self->{directories}}, delete $self->{directory};
+
+  $self->{action} = NameSanitizerAction->new (overwrite => $self->{overwrite});
+
+  bless $self, $class;
+}
+
+sub run {
+  my $self = shift;
+
+  while (my $directory = shift @{$self->{directories}}) {
+    opendir my $DIR_FH, "$directory";
+    while (my $dirent = decode_utf8 readdir $DIR_FH) {
+      next if $dirent =~ m!^\.!;
+      $self->{action}->execute ($directory, $dirent);
+    }
+
+    closedir $DIR_FH;
+  }
+}
+
+package Action;
+
+sub new {
+  bless {}, __PACKAGE__;
+}
+
+package NameSanitizerAction;
+use base qw/Action/;
+
+use File::Spec::Functions qw/catdir/;
+
+sub new {
+  my $class = shift;
+  my $self = { @_ };
+  $self->{inval_regex} = qr/[\%\$`"'_\s;:\.,\|-]+/;
+  $self->{name_transform} = {
+			     '#' => 'sharp',
+			     '+' => 'plus',
+			     'c++' => 'c-plus-plus',
+			     csharp => 'c-sharp',
+			     'c#' => 'c-sharp',
+			     'f#' => 'f-sharp',
+			     'cplus-plus' => 'c-plus-plus',
+			     'cplusplus' => 'c-plus-plus',
+			     '&' => 'and',
+			     };
+
+  bless $self, $class;
+}
+
+sub execute {
+  my ($self, $directory, $dirent) = @_;
+  my $new_name = lc $dirent;
+
+  for my $regex_str (keys %{$self->{name_transform}}) {
+    my $regex = quotemeta $regex_str;
+    $new_name =~ s/$regex/$self->{name_transform}->{$regex_str}/g;
+  }
+
+  my @embbeded_versions = $dirent =~ /(\d+\.\d+)+/g;
+
+  $new_name =~ s!(?<suffix>(\.(tar(\..*)?|\w+)$))!!g;
+  my $suffix = defined $+{suffix} ? $+{suffix} : '';
+
+  $new_name =~ s/$self->{inval_regex}/-/g;
+
+  for my $version (@embbeded_versions) {
+    my $str = $version;
+    $str =~ s/\./-/g;
+    $dirent =~ s/$str/$version/;
+  }
+
+  $new_name =~ s/(^-|-$)//g;
+
+  $new_name .= $suffix;
+  $new_name = catdir $directory, $new_name;
+  $dirent = catdir $directory, $dirent;
+
+  if ($dirent ne $new_name) {
+    if (-e $new_name) {
+      next unless $self->{overwrite};
+
+      say 'overwriting';
+    }
+
+    rename $dirent, $new_name;
+  }
+}
+
+
+package main;
+
+FileNameHelper->new->run;
