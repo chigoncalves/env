@@ -52,7 +52,7 @@ sub build_packages_list {
   my ($self, $list_name, $list_file) = @_;
 
   if (-f $list_file) {
-    open (my $INPUT, '<', $list_file);
+    open my $INPUT, '<', $list_file;
 
     while (my $line = $INPUT->getline) {
       chomp $line;
@@ -66,7 +66,7 @@ sub build_packages_list {
 sub build_repositories_list {
   my ($self, $file_name) = @_;
   if (-f $file_name) {
-    open (my $INPUT, '<', $file_name);
+    open my $INPUT, '<', $file_name;
     while (my $line = $INPUT->getline) {
       chomp $line;
       my @repo_info = split q/=/, $line;
@@ -128,13 +128,13 @@ sub run {
 
 sub set_hostname {
   my $self = shift;
-  open (my $FH, '<', '/etc/hostname');
+  open my $FH, '<', '/etc/hostname';
   my $line = $FH->getline ();
   chomp $line;
 
   return if $line eq $self->{hostname};
 
-  open (my $FH, '>', '/etc/hostname');
+  open my $FH, '>', '/etc/hostname';
   say {$FH} $self->{hostname};
 }
 
@@ -142,7 +142,7 @@ sub add_fstab_entry {
   my $self = shift;
   my $file = catdir '/etc/', 'fstab';
 
-  open (my $FH, '<', $file);
+  open my $FH, '<', $file;
   while (my $line = $FH->getline) {
     chomp $line;
     return  if $line =~ m%$self->{fstab}->{device}|$self->{fstab}->{mountpoint}%;
@@ -170,7 +170,7 @@ sub add_udev_rule {
                           $self->{udev}->{vendor}, $self->{udev}->{mode},
 			  $self->{udev}->{group};
 
-  open (my $FH, '>', $udev_file);
+  open my $FH, '>', $udev_file;
   say {$FH} $udev_rule;
 }
 
@@ -200,7 +200,7 @@ sub new {
 
   $name = $get_shell_name->($name);
 
-  open (my $FH, '<', '/etc/shells');
+  open my $FH, '<', '/etc/shells';
   while (my $excutable = $FH->getline) {
     chomp $excutable;
     my $shell_entry = $get_shell_name->($excutable);
@@ -229,7 +229,7 @@ sub set {
   copy $passwd_file, $tmp_file->filename;
   $tmp_file->seek (0, SEEK_SET);
 
-  open (my $FH, '>', $passwd_file);
+  open my $FH, '>', $passwd_file;
   while (my $line = $tmp_file->getline) {
     chomp $line;
     if ($line =~ /$user/) {

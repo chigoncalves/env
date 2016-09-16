@@ -40,7 +40,7 @@ function install_perl_packages () {
 }
 
 function install_web_dev_packages () {
-  declare -a npm_packages=(grunt-cli jshint csslint)
+  declare -a npm_packages=(grunt-cli jshint csslint grunt-contrib-cssmin)
 
   for pkg in ${npm_packages[@]}; do
     npm install -g ${pkg}
