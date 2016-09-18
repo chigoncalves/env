@@ -35,17 +35,14 @@ alias guile-rl='rlwrap ${CHI_RLWRAP_OPTS} guile'
 alias sbcl-rl='rlwrap ${CHI_RLWRAP_OPTS} sbcl'
 alias larceny-rl='rlwrap ${CHI_RLWRAP_OPTS} larceny'
 alias ccl-rl='rlwrap ${CHI_RLWRAP_OPTS} ccl'
-alias dl-site="wget --content-disposition --recursive --no-clobber \
---page-requisites --html-extension --convert-links \
---restrict-file-names=windows --tries=3 --domains"
+alias dl-site="wget --recursive --page-requisites -E --domains"
 
 if [ -e ${PERLBREW_ROOT} ]; then
   source ${PERLBREW_ROOT}/etc/bashrc
 fi
 
-alias dl-page="wget --content-disposition --no-clobber \
---page-requisites --html-extension --convert-links \
---restrict-file-names=windows --tries=3"
+alias dl-page="wget -E"
+
 
 export HISTSIZE=5000
 export SAVEHIST=3000

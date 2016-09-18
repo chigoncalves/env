@@ -15,9 +15,10 @@ config-desktop:
       - bin
 
   - wanted-dirs:
-      - $XDG_CONFIG_HOME$/fontconfig
       - .ssh
       - .ssh/var
+      - .local/share/applications
+      - $XDG_CONFIG_HOME$/fontconfig
       - $CHI_SHARE_DIR$/zeal/docset
       - $PERLBREW_ROOT$
       - $PERL_CPANM_HOME$
@@ -65,8 +66,10 @@ config-desktop:
       - monodevelop: $XDG_CONFIG_HOME$/MonoDevelop-5.0
       - secret/ssh: _self
       - secret/gnupg: _self
-      - katepartrc.conf: $XDG_CONFIG_HOME$/katepartrc
       - systemd: $XDG_CONFIG_HOME$/systemd
+      - textadept: _self
+      - $CHI_SHARE_DIR$/apps: .local/share/applications
+      - agignore: _self
 
 
   - files-to-copy:

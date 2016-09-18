@@ -5,3 +5,7 @@ secret/ssh
 secret/gnupg
 */t/
 */_t/
+textadept/session*
+textadept/themes
+textadept/modules
+systemd/user/default.target.wants

@@ -1,13 +1,18 @@
 {
-  "unused": true,
-  "undef": true,
+  "bitwise": false,
+  "curly": false,
   "eqeqeq": true,
-  "freeze": true,
+  "esversion": 5,
   "forin": true,
+  "freeze": true,
   "funcscope": true,
   "latedef": true,
   "maxdepth": 3,
   "maxerr": 20,
+  "maxparams": 5,
   "nonew": true,
-  "notypeof": true
+  "notypeof": true,
+  "shadow": false,
+  "undef": true,
+  "unused": true,
 }
